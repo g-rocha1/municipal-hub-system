@@ -3,26 +3,23 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      console.log('Iniciando tentativa de login...');
       await login(email, password);
       navigate("/");
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao fazer login",
-        description: "Email ou senha inválidos",
-      });
+    } catch (error: any) {
+      console.error('Erro no componente Login:', error);
+      toast.error(error.message || 'Email ou senha inválidos');
     }
   };
 

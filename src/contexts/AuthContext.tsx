@@ -19,16 +19,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log('Tentando fazer login com:', { email });
+      
       const response = await api.post('/auth/login', { email, password });
+      console.log('Resposta do servidor:', response.data);
+      
       const { token, user } = response.data;
+      
+      if (!token) {
+        console.error('Token não encontrado na resposta');
+        throw new Error('Token não encontrado');
+      }
       
       localStorage.setItem('token', token);
       setIsAuthenticated(true);
       setUser(user);
       toast.success('Login realizado com sucesso!');
-    } catch (error) {
-      toast.error('Erro ao fazer login. Verifique suas credenciais.');
-      throw new Error("Credenciais inválidas");
+    } catch (error: any) {
+      console.error('Erro durante o login:', error.response?.data || error.message);
+      const errorMessage = error.response?.data?.message || 'Erro ao fazer login. Verifique suas credenciais.';
+      toast.error(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
