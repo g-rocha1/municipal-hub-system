@@ -1,14 +1,15 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 import { api } from "@/services/api";
 import { toast } from "sonner";
-import { User, UserRole } from "@/services/userService";
+import { User, UserRole, UserPermission } from "@/services/userService";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, senha: string) => Promise<void>;
   logout: () => void;
-  hasPermission: (requiredRole: UserRole[]) => boolean;
+  hasPermission: (permission: UserPermission) => boolean;
+  hasRole: (requiredRole: UserRole[]) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -17,11 +18,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, senha: string) => {
     try {
       console.log('Tentando fazer login com:', { email });
       
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/api/users/login', { email, senha });
       console.log('Resposta do servidor:', response.data);
       
       const { token, user } = response.data;
@@ -50,7 +51,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     toast.success('Logout realizado com sucesso!');
   };
 
-  const hasPermission = (requiredRoles: UserRole[]) => {
+  const hasPermission = (permission: UserPermission) => {
+    if (!user) return false;
+    
+    // Master tem todas as permissões
+    if (user.role === 'master') return true;
+    
+    // Verifica se o usuário tem a permissão específica
+    return user.permissions?.includes(permission) || false;
+  };
+
+  const hasRole = (requiredRoles: UserRole[]) => {
     if (!user) return false;
     
     // Master tem acesso a tudo
@@ -61,7 +72,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, hasPermission }}>
+    <AuthContext.Provider value={{ 
+      isAuthenticated, 
+      user, 
+      login, 
+      logout, 
+      hasPermission,
+      hasRole 
+    }}>
       {children}
     </AuthContext.Provider>
   );

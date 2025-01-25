@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 export default function Login() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [senha, setSenha] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -15,7 +15,7 @@ export default function Login() {
     e.preventDefault();
     try {
       console.log('Iniciando tentativa de login...');
-      await login(email, password);
+      await login(email, senha);
       navigate("/");
     } catch (error: any) {
       console.error('Erro no componente Login:', error);
@@ -48,14 +48,14 @@ export default function Login() {
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium">
+              <label htmlFor="senha" className="block text-sm font-medium">
                 Senha
               </label>
               <Input
-                id="password"
+                id="senha"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
                 required
               />
             </div>
