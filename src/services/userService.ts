@@ -1,11 +1,14 @@
 import { api } from './api';
 
+export type UserRole = 'master' | 'admin' | 'user';
+
 export interface User {
   id: string;
   name: string;
   email: string;
   username: string;
-  role?: string;
+  role: UserRole;
+  created_by?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -15,6 +18,8 @@ export interface CreateUserData {
   email: string;
   username: string;
   password: string;
+  role: UserRole;
+  created_by?: string;
 }
 
 export interface UpdateUserData {
@@ -22,6 +27,7 @@ export interface UpdateUserData {
   email?: string;
   username?: string;
   password?: string;
+  role?: UserRole;
 }
 
 export const userService = {
