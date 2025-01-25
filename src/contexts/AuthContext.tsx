@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from "react";
+import { api } from "@/services/api";
+import { toast } from "sonner";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -12,16 +14,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const login = async (username: string, password: string) => {
-    // Simulação de autenticação - em produção, isso deve ser integrado com um backend
-    if (username === "admin" && password === "admin") {
+    try {
+      const response = await api.post('/auth/login', { username, password });
+      const { token } = response.data;
+      
+      localStorage.setItem('token', token);
       setIsAuthenticated(true);
-    } else {
+      toast.success('Login realizado com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao fazer login. Verifique suas credenciais.');
       throw new Error("Credenciais inválidas");
     }
   };
 
   const logout = () => {
+    localStorage.removeItem('token');
     setIsAuthenticated(false);
+    toast.success('Logout realizado com sucesso!');
   };
 
   return (
