@@ -1,7 +1,7 @@
-import { api } from './api';
+import { supabase } from "@/integrations/supabase/client";
 
-export type UserRole = 'master' | 'admin' | 'user';
-export type UserPermission = 'viewUsers' | 'editUsers' | 'deleteUsers';
+export type UserRole = "master" | "prefeito" | "secretario" | "user";
+export type UserPermission = "viewUsers" | "editUsers" | "deleteUsers";
 
 export interface User {
   id: string;
@@ -9,9 +9,8 @@ export interface User {
   email: string;
   role: UserRole;
   permissions?: UserPermission[];
-  created_by?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CreateUserData {
@@ -36,35 +35,68 @@ export interface ChangePasswordData {
 
 export const userService = {
   create: async (userData: CreateUserData) => {
-    const response = await api.post<User>('/api/users', userData);
-    return response.data;
-  },
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: userData.email,
+      password: userData.senha,
+      options: {
+        data: {
+          nome: userData.nome,
+          role: userData.role,
+        },
+      },
+    });
 
-  login: async (email: string, senha: string) => {
-    const response = await api.post('/api/users/login', { email, senha });
-    return response.data;
+    if (authError) throw authError;
+    return authData.user;
   },
 
   list: async () => {
-    const response = await api.get<User[]>('/api/users');
-    return response.data;
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data as User[];
   },
 
   update: async (id: string, userData: UpdateUserData) => {
-    const response = await api.put<User>(`/api/users/${id}`, userData);
-    return response.data;
+    const { data, error } = await supabase
+      .from("profiles")
+      .update(userData)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as User;
   },
 
   delete: async (id: string) => {
-    await api.delete(`/api/users/${id}`);
+    const { error } = await supabase
+      .from("profiles")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
   },
 
   changePassword: async (id: string, passwordData: ChangePasswordData) => {
-    await api.put(`/api/users/${id}/senha`, passwordData);
+    const { error } = await supabase.auth.updateUser({
+      password: passwordData.novaSenha,
+    });
+
+    if (error) throw error;
   },
 
   getById: async (id: string) => {
-    const response = await api.get<User>(`/api/users/${id}`);
-    return response.data;
-  }
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) throw error;
+    return data as User;
+  },
 };
