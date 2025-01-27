@@ -9,6 +9,84 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      financial_goals: {
+        Row: {
+          created_at: string
+          created_by: string
+          current_amount: number | null
+          description: string
+          id: string
+          target_amount: number
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          current_amount?: number | null
+          description: string
+          id?: string
+          target_amount: number
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          current_amount?: number | null
+          description?: string
+          id?: string
+          target_amount?: number
+          type?: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      financial_transactions: {
+        Row: {
+          amount: number
+          category: Database["public"]["Enums"]["financial_category"]
+          created_at: string
+          created_by: string
+          date: string
+          description: string
+          document_url: string | null
+          id: string
+          notes: string | null
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category: Database["public"]["Enums"]["financial_category"]
+          created_at?: string
+          created_by: string
+          date: string
+          description: string
+          document_url?: string | null
+          id?: string
+          notes?: string | null
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: Database["public"]["Enums"]["financial_category"]
+          created_at?: string
+          created_by?: string
+          date?: string
+          description?: string
+          document_url?: string | null
+          id?: string
+          notes?: string | null
+          type?: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -47,6 +125,16 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      financial_category:
+        | "impostos"
+        | "taxas"
+        | "transferencias"
+        | "outros_receita"
+        | "pessoal"
+        | "materiais"
+        | "servicos"
+        | "outros_despesa"
+      transaction_type: "receita" | "despesa"
       user_role: "master" | "prefeito" | "secretario" | "user"
     }
     CompositeTypes: {

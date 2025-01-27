@@ -13,6 +13,9 @@ import UserList from "./pages/users/UserList";
 import UserAdd from "./pages/users/UserAdd";
 import UserEdit from "./pages/users/UserEdit";
 import ChangePassword from "./pages/users/ChangePassword";
+import FinancialTransactions from "./pages/financial/FinancialTransactions";
+import FinancialGoals from "./pages/financial/FinancialGoals";
+import FinancialDashboard from "./pages/financial/FinancialDashboard";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +43,9 @@ const App = () => (
                           <Route path="/users/add" element={<UserAdd />} />
                           <Route path="/users/edit/:id" element={<UserEdit />} />
                           <Route path="/users/change-password" element={<ChangePassword />} />
+                          <Route path="/financial/transactions" element={<FinancialTransactions />} />
+                          <Route path="/financial/goals" element={<FinancialGoals />} />
+                          <Route path="/financial/dashboard" element={<FinancialDashboard />} />
                         </Routes>
                       </div>
                     </main>
