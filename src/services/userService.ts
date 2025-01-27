@@ -1,7 +1,15 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type UserRole = "master" | "prefeito" | "secretario" | "user";
-export type UserPermission = "viewUsers" | "editUsers" | "deleteUsers";
+export type UserPermission = 
+  | "viewUsers" 
+  | "editUsers" 
+  | "deleteUsers"
+  | "viewDashboard"
+  | "editGoals"
+  | "deleteGoals"
+  | "sendMessages"
+  | "viewMessages";
 
 export interface User {
   id: string;
