@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -11,8 +12,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/utils";
+import { Plus } from "lucide-react";
 
 const FinancialTransactions = () => {
+  const navigate = useNavigate();
   const { data: transactions, isLoading } = useQuery({
     queryKey: ['financial-transactions'],
     queryFn: async () => {
@@ -30,7 +33,10 @@ const FinancialTransactions = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Transações Financeiras</h1>
-        <Button>Nova Transação</Button>
+        <Button onClick={() => navigate("/financial/transactions/add")}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nova Transação
+        </Button>
       </div>
 
       <div className="rounded-md border">
@@ -49,7 +55,7 @@ const FinancialTransactions = () => {
               <TableRow key={transaction.id}>
                 <TableCell>{new Date(transaction.date).toLocaleDateString('pt-BR')}</TableCell>
                 <TableCell className="capitalize">{transaction.type}</TableCell>
-                <TableCell className="capitalize">{transaction.category}</TableCell>
+                <TableCell className="capitalize">{transaction.category.replace('_', ' ')}</TableCell>
                 <TableCell>{transaction.description}</TableCell>
                 <TableCell className={`text-right ${transaction.type === 'receita' ? 'text-green-600' : 'text-red-600'}`}>
                   {formatCurrency(transaction.amount)}

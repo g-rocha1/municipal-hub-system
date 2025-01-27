@@ -14,6 +14,7 @@ import UserAdd from "./pages/users/UserAdd";
 import UserEdit from "./pages/users/UserEdit";
 import ChangePassword from "./pages/users/ChangePassword";
 import FinancialTransactions from "./pages/financial/FinancialTransactions";
+import TransactionForm from "./pages/financial/TransactionForm";
 import FinancialGoals from "./pages/financial/FinancialGoals";
 import FinancialDashboard from "./pages/financial/FinancialDashboard";
 
@@ -44,6 +45,7 @@ const App = () => (
                           <Route path="/users/edit/:id" element={<UserEdit />} />
                           <Route path="/users/change-password" element={<ChangePassword />} />
                           <Route path="/financial/transactions" element={<FinancialTransactions />} />
+                          <Route path="/financial/transactions/add" element={<TransactionForm />} />
                           <Route path="/financial/goals" element={<FinancialGoals />} />
                           <Route path="/financial/dashboard" element={<FinancialDashboard />} />
                         </Routes>
