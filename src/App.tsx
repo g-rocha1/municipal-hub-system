@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { Header } from "@/components/Header";
+import { Sidebar } from "@/components/Sidebar";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import UserList from "./pages/users/UserList";
@@ -21,49 +23,31 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/users"
-              element={
-                <ProtectedRoute>
-                  <UserList />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/users/add"
-              element={
-                <ProtectedRoute>
-                  <UserAdd />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/users/edit/:id"
-              element={
-                <ProtectedRoute>
-                  <UserEdit />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/users/change-password"
-              element={
-                <ProtectedRoute>
-                  <ChangePassword />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
+          <div className="min-h-screen bg-background">
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/*"
+                element={
+                  <ProtectedRoute>
+                    <Sidebar />
+                    <Header />
+                    <main className="pl-16 pt-14">
+                      <div className="container py-6">
+                        <Routes>
+                          <Route path="/" element={<Index />} />
+                          <Route path="/users" element={<UserList />} />
+                          <Route path="/users/add" element={<UserAdd />} />
+                          <Route path="/users/edit/:id" element={<UserEdit />} />
+                          <Route path="/users/change-password" element={<ChangePassword />} />
+                        </Routes>
+                      </div>
+                    </main>
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </div>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
