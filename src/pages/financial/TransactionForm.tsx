@@ -23,10 +23,11 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { Database } from "@/integrations/supabase/types";
 
-interface TransactionFormData {
-  type: "receita" | "despesa";
-  category: string;
+type TransactionFormData = {
+  type: Database["public"]["Enums"]["transaction_type"];
+  category: Database["public"]["Enums"]["financial_category"];
   description: string;
   amount: number;
   date: string;
@@ -96,8 +97,8 @@ const TransactionForm = () => {
     mutation.mutate(data);
   };
 
-  const receiptaCategories = ['impostos', 'taxas', 'transferencias', 'outros_receita'];
-  const expenseCategories = ['pessoal', 'materiais', 'servicos', 'outros_despesa'];
+  const receiptCategories: Database["public"]["Enums"]["financial_category"][] = ['impostos', 'taxas', 'transferencias', 'outros_receita'];
+  const expenseCategories: Database["public"]["Enums"]["financial_category"][] = ['pessoal', 'materiais', 'servicos', 'outros_despesa'];
 
   return (
     <div className="space-y-6">
@@ -143,7 +144,7 @@ const TransactionForm = () => {
                   </FormControl>
                   <SelectContent>
                     {form.watch("type") === "receita"
-                      ? receiptaCategories.map((category) => (
+                      ? receiptCategories.map((category) => (
                           <SelectItem key={category} value={category}>
                             {category.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase())}
                           </SelectItem>
