@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import { NavLink, useLocation } from "react-router-dom";
+import { UserPermission } from "@/services/userService";
 import {
   Users,
   LayoutDashboard,
@@ -25,7 +26,7 @@ interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-  { icon: Users, label: "Usuários", path: "/users", permission: "viewUsers" },
+  { icon: Users, label: "Usuários", path: "/users", permission: "viewUsers" as UserPermission },
   { icon: MessageSquare, label: "Mensagens", path: "/messages" },
   { icon: Target, label: "Metas", path: "/goals" },
   { icon: Bell, label: "Notificações", path: "/notifications" },
