@@ -38,23 +38,17 @@ const Login = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     if (isLoading) return;
-    
+
     try {
       console.log("Login: Attempting login with:", data.email);
       setIsLoading(true);
-      
+
       await login(data.email, data.senha);
       console.log("Login: Login successful, navigating to /");
       navigate("/");
     } catch (error: any) {
       console.error("Login: Error during login:", error);
       setIsLoading(false);
-      
-      if (error.message === "Invalid login credentials") {
-        toast.error("Email ou senha incorretos");
-      } else {
-        toast.error("Erro ao fazer login. Tente novamente.");
-      }
     }
   };
 

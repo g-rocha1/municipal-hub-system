@@ -20,35 +20,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     console.log("AuthProvider: Checking initial session");
-    
-    // Verificar sessão atual
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("AuthProvider: Initial session check result:", session);
-      if (session) {
-        setIsAuthenticated(true);
-        fetchUserProfile(session.user.id);
-      }
-    });
+    checkSession();
 
-    // Escutar mudanças na autenticação
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("AuthProvider: Auth state changed:", event, session);
-      
-      if (event === "SIGNED_IN" && session) {
-        setIsAuthenticated(true);
-        await fetchUserProfile(session.user.id);
-      } else if (event === "SIGNED_OUT") {
-        setIsAuthenticated(false);
-        setUser(null);
-      }
-    });
+    } = supabase.auth.onAuthStateChange(handleAuthChange);
 
     return () => {
       subscription.unsubscribe();
     };
   }, []);
+
+  const checkSession = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log("AuthProvider: Initial session check result:", session);
+      
+      if (session?.user) {
+        setIsAuthenticated(true);
+        await fetchUserProfile(session.user.id);
+      }
+    } catch (error) {
+      console.error("AuthProvider: Error checking session:", error);
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+  };
+
+  const handleAuthChange = async (event: string, session: any) => {
+    console.log("AuthProvider: Auth state changed:", event, session);
+
+    if (event === "SIGNED_IN" && session) {
+      setIsAuthenticated(true);
+      await fetchUserProfile(session.user.id);
+    } else if (event === "SIGNED_OUT") {
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+  };
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -58,29 +67,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from("profiles")
         .select("*")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("AuthProvider: Error fetching profile:", error);
         throw error;
       }
-      
+
       if (data) {
         console.log("AuthProvider: Profile fetched successfully:", data);
         setUser(data as User);
+      } else {
+        console.error("AuthProvider: No profile found for user");
+        throw new Error("Perfil não encontrado");
       }
     } catch (error) {
       console.error("AuthProvider: Error in fetchUserProfile:", error);
       toast.error("Erro ao carregar perfil do usuário");
       setIsAuthenticated(false);
       setUser(null);
+      throw error;
     }
   };
 
   const login = async (email: string, senha: string) => {
     try {
       console.log("AuthProvider: Attempting login for:", email);
-      
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password: senha,
@@ -91,11 +104,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
 
-      if (data.user) {
-        console.log("AuthProvider: Login successful:", data.user);
-        await fetchUserProfile(data.user.id);
-        toast.success("Login realizado com sucesso!");
+      if (!data.user) {
+        throw new Error("Usuário não encontrado");
       }
+
+      console.log("AuthProvider: Login successful:", data.user);
+      await fetchUserProfile(data.user.id);
+      toast.success("Login realizado com sucesso!");
     } catch (error: any) {
       console.error("AuthProvider: Error during login:", error);
       if (error.message === "Invalid login credentials") {
