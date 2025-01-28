@@ -13,6 +13,9 @@ import UserList from "./pages/users/UserList";
 import UserAdd from "./pages/users/UserAdd";
 import UserEdit from "./pages/users/UserEdit";
 import ChangePassword from "./pages/users/ChangePassword";
+import GoalList from "./pages/goals/GoalList";
+import GoalAdd from "./pages/goals/GoalAdd";
+import GoalEdit from "./pages/goals/GoalEdit";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +43,9 @@ const App = () => (
                           <Route path="/users/add" element={<UserAdd />} />
                           <Route path="/users/edit/:id" element={<UserEdit />} />
                           <Route path="/users/change-password" element={<ChangePassword />} />
+                          <Route path="/goals" element={<GoalList />} />
+                          <Route path="/goals/add" element={<GoalAdd />} />
+                          <Route path="/goals/edit/:id" element={<GoalEdit />} />
                         </Routes>
                       </div>
                     </main>
