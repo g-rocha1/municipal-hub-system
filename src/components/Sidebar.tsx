@@ -27,8 +27,8 @@ interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
   { icon: Users, label: "Usuários", path: "/users", permission: "viewUsers" as UserPermission },
-  { icon: Target, label: "Metas", path: "/goals" },
   { icon: MessageSquare, label: "Mensagens", path: "/messages" },
+  { icon: Target, label: "Metas", path: "/goals" },
   { icon: Bell, label: "Notificações", path: "/notifications" },
   { icon: Building2, label: "Administração", path: "/admin" },
   { icon: GraduationCap, label: "Educação", path: "/education" },
