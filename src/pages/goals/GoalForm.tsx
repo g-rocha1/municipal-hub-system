@@ -19,23 +19,28 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+
+interface GoalFormData {
+  year: number;
+  type: "receita" | "despesa";
+  target_amount: number;
+  current_amount: number;
+  description: string;
+}
 
 interface GoalFormProps {
-  initialData?: {
+  initialData?: GoalFormData & {
     id: string;
-    year: number;
-    type: "receita" | "despesa";
-    target_amount: number;
-    current_amount: number;
-    description: string;
   };
 }
 
 const GoalForm = ({ initialData }: GoalFormProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const isEditing = !!initialData;
 
-  const form = useForm({
+  const form = useForm<GoalFormData>({
     defaultValues: {
       year: initialData?.year || new Date().getFullYear(),
       type: initialData?.type || "receita",
@@ -45,8 +50,13 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
     },
   });
 
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: GoalFormData) => {
     try {
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return;
+      }
+
       if (isEditing) {
         const { error } = await supabase
           .from("financial_goals")
@@ -62,15 +72,14 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
         if (error) throw error;
         toast.success("Meta atualizada com sucesso!");
       } else {
-        const { error } = await supabase.from("financial_goals").insert([
-          {
-            year: values.year,
-            type: values.type,
-            target_amount: values.target_amount,
-            current_amount: values.current_amount,
-            description: values.description,
-          },
-        ]);
+        const { error } = await supabase.from("financial_goals").insert({
+          year: values.year,
+          type: values.type,
+          target_amount: values.target_amount,
+          current_amount: values.current_amount,
+          description: values.description,
+          created_by: user.id,
+        });
 
         if (error) throw error;
         toast.success("Meta criada com sucesso!");
@@ -104,7 +113,11 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
               <FormItem>
                 <FormLabel>Ano</FormLabel>
                 <FormControl>
-                  <Input type="number" {...field} />
+                  <Input 
+                    type="number" 
+                    {...field} 
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -143,7 +156,12 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
               <FormItem>
                 <FormLabel>Valor da Meta</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" {...field} />
+                  <Input 
+                    type="number" 
+                    step="0.01" 
+                    {...field}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -157,7 +175,12 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
               <FormItem>
                 <FormLabel>Valor Atual</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" {...field} />
+                  <Input 
+                    type="number" 
+                    step="0.01" 
+                    {...field}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
