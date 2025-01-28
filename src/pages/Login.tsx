@@ -12,27 +12,42 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { toast } from "sonner";
 
-interface LoginFormData {
-  email: string;
-  senha: string;
-}
+const loginSchema = z.object({
+  email: z.string().email("Email inválido"),
+  senha: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const form = useForm<LoginFormData>();
+
+  const form = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      senha: "",
+    },
+  });
 
   const onSubmit = async (data: LoginFormData) => {
+    if (isLoading) return;
+
     try {
+      console.log("Login: Attempting login with:", data.email);
       setIsLoading(true);
+
       await login(data.email, data.senha);
+      console.log("Login: Login successful, navigating to /");
       navigate("/");
-    } catch (error) {
-      console.error("Erro no login:", error);
-    } finally {
+    } catch (error: any) {
+      console.error("Login: Error during login:", error);
       setIsLoading(false);
     }
   };
@@ -59,6 +74,7 @@ const Login = () => {
                     <Input
                       type="email"
                       placeholder="seu.email@exemplo.com"
+                      disabled={isLoading}
                       {...field}
                     />
                   </FormControl>
@@ -77,6 +93,7 @@ const Login = () => {
                     <Input
                       type="password"
                       placeholder="Sua senha"
+                      disabled={isLoading}
                       {...field}
                     />
                   </FormControl>

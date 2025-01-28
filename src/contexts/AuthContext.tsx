@@ -19,70 +19,113 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // Verificar sessão atual
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setIsAuthenticated(true);
-        fetchUserProfile(session.user.id);
-      }
-    });
+    console.log("AuthProvider: Checking initial session");
+    checkSession();
 
-    // Escutar mudanças na autenticação
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        setIsAuthenticated(true);
-        await fetchUserProfile(session.user.id);
-      } else if (event === "SIGNED_OUT") {
-        setIsAuthenticated(false);
-        setUser(null);
-      }
-    });
+    } = supabase.auth.onAuthStateChange(handleAuthChange);
 
     return () => {
       subscription.unsubscribe();
     };
   }, []);
 
+  const checkSession = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log("AuthProvider: Initial session check result:", session);
+      
+      if (session?.user) {
+        setIsAuthenticated(true);
+        await fetchUserProfile(session.user.id);
+      }
+    } catch (error) {
+      console.error("AuthProvider: Error checking session:", error);
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+  };
+
+  const handleAuthChange = async (event: string, session: any) => {
+    console.log("AuthProvider: Auth state changed:", event, session);
+
+    if (event === "SIGNED_IN" && session) {
+      setIsAuthenticated(true);
+      await fetchUserProfile(session.user.id);
+    } else if (event === "SIGNED_OUT") {
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+  };
+
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log("AuthProvider: Fetching user profile for:", userId);
+      
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
-      if (data) setUser(data as User);
+      if (error) {
+        console.error("AuthProvider: Error fetching profile:", error);
+        throw error;
+      }
+
+      if (data) {
+        console.log("AuthProvider: Profile fetched successfully:", data);
+        setUser(data as User);
+      } else {
+        console.error("AuthProvider: No profile found for user");
+        throw new Error("Perfil não encontrado");
+      }
     } catch (error) {
-      console.error("Erro ao buscar perfil:", error);
+      console.error("AuthProvider: Error in fetchUserProfile:", error);
       toast.error("Erro ao carregar perfil do usuário");
+      setIsAuthenticated(false);
+      setUser(null);
+      throw error;
     }
   };
 
   const login = async (email: string, senha: string) => {
     try {
+      console.log("AuthProvider: Attempting login for:", email);
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password: senha,
       });
 
-      if (error) throw error;
-
-      if (data.user) {
-        await fetchUserProfile(data.user.id);
-        toast.success("Login realizado com sucesso!");
+      if (error) {
+        console.error("AuthProvider: Login error:", error);
+        throw error;
       }
+
+      if (!data.user) {
+        throw new Error("Usuário não encontrado");
+      }
+
+      console.log("AuthProvider: Login successful:", data.user);
+      await fetchUserProfile(data.user.id);
+      toast.success("Login realizado com sucesso!");
     } catch (error: any) {
-      console.error("Erro durante o login:", error);
-      toast.error(error.message || "Erro ao fazer login");
+      console.error("AuthProvider: Error during login:", error);
+      if (error.message === "Invalid login credentials") {
+        toast.error("Email ou senha incorretos");
+      } else {
+        toast.error(error.message || "Erro ao fazer login");
+      }
       throw error;
     }
   };
 
   const logout = async () => {
     try {
+      console.log("AuthProvider: Attempting logout");
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
@@ -90,28 +133,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       toast.success("Logout realizado com sucesso!");
     } catch (error: any) {
-      console.error("Erro durante o logout:", error);
+      console.error("AuthProvider: Error during logout:", error);
       toast.error(error.message || "Erro ao fazer logout");
     }
   };
 
   const hasPermission = (permission: UserPermission) => {
     if (!user) return false;
-    
-    // Master tem todas as permissões
     if (user.role === "master") return true;
-    
-    // Verifica se o usuário tem a permissão específica
     return user.permissions?.includes(permission) || false;
   };
 
   const hasRole = (requiredRoles: UserRole[]) => {
     if (!user) return false;
-    
-    // Master tem acesso a tudo
     if (user.role === "master") return true;
-    
-    // Verifica se o papel do usuário está entre os papéis permitidos
     return requiredRoles.includes(user.role);
   };
 
