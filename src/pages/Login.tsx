@@ -12,42 +12,26 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 
-const loginSchema = z.object({
-  email: z.string().email("Email inválido"),
-  senha: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
-});
-
-type LoginFormData = z.infer<typeof loginSchema>;
+interface LoginFormData {
+  email: string;
+  senha: string;
+}
 
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  
-  const form = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      senha: "",
-    },
-  });
+  const form = useForm<LoginFormData>();
 
   const onSubmit = async (data: LoginFormData) => {
     try {
       setIsLoading(true);
       await login(data.email, data.senha);
       navigate("/");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Erro no login:", error);
-      if (error.message.includes("Invalid login credentials")) {
-        toast.error("Email ou senha incorretos");
-      } else {
-        toast.error("Erro ao fazer login. Tente novamente.");
-      }
     } finally {
       setIsLoading(false);
     }
@@ -59,7 +43,7 @@ const Login = () => {
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">Sistema Integrado Municipal</h1>
           <p className="text-muted-foreground">
-            Secretaria Municipal de Cultura, Esporte e Lazer
+            Faça login para acessar o sistema
           </p>
         </div>
 

@@ -19,7 +19,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    // Check current session
+    // Verificar sessão atual
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setIsAuthenticated(true);
@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Listen for auth changes
+    // Escutar mudanças na autenticação
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -51,12 +51,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from("profiles")
         .select("*")
         .eq("id", userId)
-        .maybeSingle();
+        .single();
 
       if (error) throw error;
       if (data) setUser(data as User);
     } catch (error) {
-      console.error("Error fetching profile:", error);
+      console.error("Erro ao buscar perfil:", error);
       toast.error("Erro ao carregar perfil do usuário");
     }
   };
@@ -75,7 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         toast.success("Login realizado com sucesso!");
       }
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error("Erro durante o login:", error);
+      toast.error(error.message || "Erro ao fazer login");
       throw error;
     }
   };
@@ -89,20 +90,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       toast.success("Logout realizado com sucesso!");
     } catch (error: any) {
-      console.error("Logout error:", error);
+      console.error("Erro durante o logout:", error);
       toast.error(error.message || "Erro ao fazer logout");
     }
   };
 
   const hasPermission = (permission: UserPermission) => {
     if (!user) return false;
+    
+    // Master tem todas as permissões
     if (user.role === "master") return true;
+    
+    // Verifica se o usuário tem a permissão específica
     return user.permissions?.includes(permission) || false;
   };
 
   const hasRole = (requiredRoles: UserRole[]) => {
     if (!user) return false;
+    
+    // Master tem acesso a tudo
     if (user.role === "master") return true;
+    
+    // Verifica se o papel do usuário está entre os papéis permitidos
     return requiredRoles.includes(user.role);
   };
 
@@ -125,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error("useAuth deve ser usado dentro de um AuthProvider");
   }
   return context;
 }
