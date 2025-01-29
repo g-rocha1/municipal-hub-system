@@ -34,65 +34,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkSession = async () => {
     try {
-      console.log("AuthProvider: Checking session...");
       const { data: { session } } = await supabase.auth.getSession();
-      console.log("AuthProvider: Session check result:", session);
       
       if (session?.user) {
         await fetchUserProfile(session.user.id);
-        setIsAuthenticated(true);
       } else {
-        setIsAuthenticated(false);
         setUser(null);
+        setIsAuthenticated(false);
       }
     } catch (error) {
-      console.error("AuthProvider: Error checking session:", error);
-      setIsAuthenticated(false);
+      console.error("Error checking session:", error);
       setUser(null);
+      setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleAuthChange = async (event: string, session: any) => {
-    console.log("AuthProvider: Auth state changed:", event, session);
-
-    if (event === "SIGNED_IN" && session) {
+    if (event === "SIGNED_IN" && session?.user) {
       await fetchUserProfile(session.user.id);
       setIsAuthenticated(true);
     } else if (event === "SIGNED_OUT") {
-      setIsAuthenticated(false);
       setUser(null);
+      setIsAuthenticated(false);
     }
   };
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      console.log("AuthProvider: Fetching user profile for:", userId);
-      
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
-        .maybeSingle();
+        .single();
 
-      if (error) {
-        console.error("AuthProvider: Error fetching profile:", error);
-        throw error;
-      }
+      if (error) throw error;
 
       if (data) {
-        console.log("AuthProvider: Profile fetched successfully:", data);
         setUser(data as User);
+        setIsAuthenticated(true);
       } else {
-        console.error("AuthProvider: No profile found for user");
         throw new Error("Perfil não encontrado");
       }
     } catch (error) {
-      console.error("AuthProvider: Error in fetchUserProfile:", error);
-      toast.error("Erro ao carregar perfil do usuário");
-      setIsAuthenticated(false);
+      console.error("Error fetching profile:", error);
       setUser(null);
+      setIsAuthenticated(false);
       throw error;
     }
   };
@@ -100,28 +88,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, senha: string) => {
     try {
       setIsLoading(true);
-      console.log("AuthProvider: Attempting login for:", email);
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password: senha,
       });
 
-      if (error) {
-        console.error("AuthProvider: Login error:", error);
-        throw error;
-      }
+      if (error) throw error;
 
       if (!data.user) {
         throw new Error("Usuário não encontrado");
       }
 
-      console.log("AuthProvider: Login successful:", data.user);
       await fetchUserProfile(data.user.id);
-      setIsAuthenticated(true);
       toast.success("Login realizado com sucesso!");
     } catch (error: any) {
-      console.error("AuthProvider: Error during login:", error);
       if (error.message === "Invalid login credentials") {
         toast.error("Email ou senha incorretos");
       } else {
@@ -136,16 +116,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       setIsLoading(true);
-      console.log("AuthProvider: Attempting logout");
-      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      setIsAuthenticated(false);
       setUser(null);
+      setIsAuthenticated(false);
       toast.success("Logout realizado com sucesso!");
     } catch (error: any) {
-      console.error("AuthProvider: Error during logout:", error);
       toast.error(error.message || "Erro ao fazer logout");
     } finally {
       setIsLoading(false);
