@@ -21,7 +21,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    console.log("AuthProvider: Checking initial session");
     checkSession();
 
     const {
@@ -37,11 +36,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log("AuthProvider: Checking session...");
       const { data: { session } } = await supabase.auth.getSession();
-      console.log("AuthProvider: Initial session check result:", session);
+      console.log("AuthProvider: Session check result:", session);
       
       if (session?.user) {
-        setIsAuthenticated(true);
         await fetchUserProfile(session.user.id);
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+        setUser(null);
       }
     } catch (error) {
       console.error("AuthProvider: Error checking session:", error);
@@ -56,8 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log("AuthProvider: Auth state changed:", event, session);
 
     if (event === "SIGNED_IN" && session) {
-      setIsAuthenticated(true);
       await fetchUserProfile(session.user.id);
+      setIsAuthenticated(true);
     } else if (event === "SIGNED_OUT") {
       setIsAuthenticated(false);
       setUser(null);
@@ -97,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, senha: string) => {
     try {
+      setIsLoading(true);
       console.log("AuthProvider: Attempting login for:", email);
 
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -115,6 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log("AuthProvider: Login successful:", data.user);
       await fetchUserProfile(data.user.id);
+      setIsAuthenticated(true);
       toast.success("Login realizado com sucesso!");
     } catch (error: any) {
       console.error("AuthProvider: Error during login:", error);
@@ -124,11 +128,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         toast.error(error.message || "Erro ao fazer login");
       }
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const logout = async () => {
     try {
+      setIsLoading(true);
       console.log("AuthProvider: Attempting logout");
       
       const { error } = await supabase.auth.signOut();
@@ -140,6 +147,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       console.error("AuthProvider: Error during logout:", error);
       toast.error(error.message || "Erro ao fazer logout");
+    } finally {
+      setIsLoading(false);
     }
   };
 
