@@ -21,11 +21,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
+    // Check for existing session on mount
     checkSession();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(handleAuthChange);
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session);
+      
+      if (event === "SIGNED_IN" && session) {
+        await handleSignIn(session);
+      } else if (event === "SIGNED_OUT") {
+        handleSignOut();
+      } else if (event === "TOKEN_REFRESHED" && session) {
+        await handleSignIn(session);
+      }
+    });
 
     return () => {
       subscription.unsubscribe();
@@ -35,54 +45,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const checkSession = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        await fetchUserProfile(session.user.id);
+      console.log("Checking session:", session);
+
+      if (session) {
+        await handleSignIn(session);
       } else {
-        setUser(null);
-        setIsAuthenticated(false);
+        handleSignOut();
       }
     } catch (error) {
       console.error("Error checking session:", error);
-      setUser(null);
-      setIsAuthenticated(false);
+      handleSignOut();
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleAuthChange = async (event: string, session: any) => {
-    if (event === "SIGNED_IN" && session?.user) {
-      await fetchUserProfile(session.user.id);
-      setIsAuthenticated(true);
-    } else if (event === "SIGNED_OUT") {
-      setUser(null);
-      setIsAuthenticated(false);
-    }
-  };
-
-  const fetchUserProfile = async (userId: string) => {
+  const handleSignIn = async (session: any) => {
     try {
-      const { data, error } = await supabase
+      if (!session?.user?.id) {
+        throw new Error("No user ID in session");
+      }
+
+      const { data: profile, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", userId)
+        .eq("id", session.user.id)
         .single();
 
       if (error) throw error;
 
-      if (data) {
-        setUser(data as User);
+      if (profile) {
+        setUser(profile as User);
         setIsAuthenticated(true);
       } else {
-        throw new Error("Perfil não encontrado");
+        throw new Error("Profile not found");
       }
     } catch (error) {
-      console.error("Error fetching profile:", error);
-      setUser(null);
-      setIsAuthenticated(false);
-      throw error;
+      console.error("Error handling sign in:", error);
+      handleSignOut();
     }
+  };
+
+  const handleSignOut = () => {
+    setUser(null);
+    setIsAuthenticated(false);
   };
 
   const login = async (email: string, senha: string) => {
@@ -96,10 +102,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
 
       if (!data.user) {
-        throw new Error("Usuário não encontrado");
+        throw new Error("User not found");
       }
 
-      await fetchUserProfile(data.user.id);
       toast.success("Login realizado com sucesso!");
     } catch (error: any) {
       if (error.message === "Invalid login credentials") {
@@ -119,8 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      setUser(null);
-      setIsAuthenticated(false);
+      handleSignOut();
       toast.success("Logout realizado com sucesso!");
     } catch (error: any) {
       toast.error(error.message || "Erro ao fazer logout");
