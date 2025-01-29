@@ -21,6 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
+    console.log("AuthProvider: Checking initial session");
     checkSession();
 
     const {
@@ -34,98 +35,111 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkSession = async () => {
     try {
+      console.log("AuthProvider: Checking session...");
       const { data: { session } } = await supabase.auth.getSession();
+      console.log("AuthProvider: Initial session check result:", session);
       
       if (session?.user) {
+        setIsAuthenticated(true);
         await fetchUserProfile(session.user.id);
-      } else {
-        setUser(null);
-        setIsAuthenticated(false);
       }
     } catch (error) {
-      console.error("Error checking session:", error);
-      setUser(null);
+      console.error("AuthProvider: Error checking session:", error);
       setIsAuthenticated(false);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleAuthChange = async (event: string, session: any) => {
-    if (event === "SIGNED_IN" && session?.user) {
-      await fetchUserProfile(session.user.id);
+    console.log("AuthProvider: Auth state changed:", event, session);
+
+    if (event === "SIGNED_IN" && session) {
       setIsAuthenticated(true);
+      await fetchUserProfile(session.user.id);
     } else if (event === "SIGNED_OUT") {
-      setUser(null);
       setIsAuthenticated(false);
+      setUser(null);
     }
   };
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log("AuthProvider: Fetching user profile for:", userId);
+      
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error("AuthProvider: Error fetching profile:", error);
+        throw error;
+      }
 
       if (data) {
+        console.log("AuthProvider: Profile fetched successfully:", data);
         setUser(data as User);
-        setIsAuthenticated(true);
       } else {
+        console.error("AuthProvider: No profile found for user");
         throw new Error("Perfil não encontrado");
       }
     } catch (error) {
-      console.error("Error fetching profile:", error);
-      setUser(null);
+      console.error("AuthProvider: Error in fetchUserProfile:", error);
+      toast.error("Erro ao carregar perfil do usuário");
       setIsAuthenticated(false);
+      setUser(null);
       throw error;
     }
   };
 
   const login = async (email: string, senha: string) => {
     try {
-      setIsLoading(true);
+      console.log("AuthProvider: Attempting login for:", email);
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password: senha,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("AuthProvider: Login error:", error);
+        throw error;
+      }
 
       if (!data.user) {
         throw new Error("Usuário não encontrado");
       }
 
+      console.log("AuthProvider: Login successful:", data.user);
       await fetchUserProfile(data.user.id);
       toast.success("Login realizado com sucesso!");
     } catch (error: any) {
+      console.error("AuthProvider: Error during login:", error);
       if (error.message === "Invalid login credentials") {
         toast.error("Email ou senha incorretos");
       } else {
         toast.error(error.message || "Erro ao fazer login");
       }
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const logout = async () => {
     try {
-      setIsLoading(true);
+      console.log("AuthProvider: Attempting logout");
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      setUser(null);
       setIsAuthenticated(false);
+      setUser(null);
       toast.success("Logout realizado com sucesso!");
     } catch (error: any) {
+      console.error("AuthProvider: Error during logout:", error);
       toast.error(error.message || "Erro ao fazer logout");
-    } finally {
-      setIsLoading(false);
     }
   };
 

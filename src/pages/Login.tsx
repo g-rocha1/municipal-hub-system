@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -20,14 +20,14 @@ const loginSchema = z.object({
   senha: z.string().min(6, "A senha deve ter no mínimo 6 caracteres"),
 });
 
-type LoginForm = z.infer<typeof loginSchema>;
+type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function Login() {
+const Login = () => {
   const navigate = useNavigate();
-  const { login, isAuthenticated, isLoading } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<LoginForm>({
+  const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
@@ -36,29 +36,36 @@ export default function Login() {
   });
 
   useEffect(() => {
-    if (isAuthenticated && !isLoading) {
+    if (isAuthenticated && !authLoading) {
       navigate("/");
     }
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [isAuthenticated, authLoading, navigate]);
 
-  const onSubmit = async (data: LoginForm) => {
+  const onSubmit = async (data: LoginFormData) => {
+    if (isLoading) return;
+
     try {
-      setIsSubmitting(true);
+      console.log("Login: Attempting login with:", data.email);
+      setIsLoading(true);
+
       await login(data.email, data.senha);
+      console.log("Login: Login successful, navigating to /");
       navigate("/");
-    } catch (error) {
-      console.error("Login error:", error);
+    } catch (error: any) {
+      console.error("Login: Error during login:", error);
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+  if (authLoading) {
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>;
+  }
+
+  if (isAuthenticated) {
+    return null;
   }
 
   return (
@@ -82,7 +89,8 @@ export default function Login() {
                   <FormControl>
                     <Input
                       type="email"
-                      placeholder="Digite seu email"
+                      placeholder="seu@email.com"
+                      disabled={isLoading}
                       {...field}
                     />
                   </FormControl>
@@ -100,7 +108,8 @@ export default function Login() {
                   <FormControl>
                     <Input
                       type="password"
-                      placeholder="Digite sua senha"
+                      placeholder="••••••"
+                      disabled={isLoading}
                       {...field}
                     />
                   </FormControl>
@@ -109,13 +118,12 @@ export default function Login() {
               )}
             />
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Entrando...
+                </>
               ) : (
                 "Entrar"
               )}
@@ -125,4 +133,6 @@ export default function Login() {
       </div>
     </div>
   );
-}
+};
+
+export default Login;
