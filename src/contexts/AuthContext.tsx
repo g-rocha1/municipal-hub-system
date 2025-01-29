@@ -5,6 +5,7 @@ import { User, UserRole, UserPermission } from "@/services/userService";
 
 interface AuthContextType {
   isAuthenticated: boolean;
+  isLoading: boolean;
   user: User | null;
   login: (email: string, senha: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -33,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkSession = async () => {
     try {
+      console.log("AuthProvider: Checking session...");
       const { data: { session } } = await supabase.auth.getSession();
       console.log("AuthProvider: Initial session check result:", session);
       
@@ -44,6 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("AuthProvider: Error checking session:", error);
       setIsAuthenticated(false);
       setUser(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -154,6 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         isAuthenticated,
+        isLoading,
         user,
         login,
         logout,

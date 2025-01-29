@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -11,21 +13,18 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
-  senha: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+  senha: z.string().min(6, "A senha deve ter no mínimo 6 caracteres"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginFormData>({
@@ -35,6 +34,12 @@ const Login = () => {
       senha: "",
     },
   });
+
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
+      navigate("/");
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
   const onSubmit = async (data: LoginFormData) => {
     if (isLoading) return;
@@ -48,17 +53,28 @@ const Login = () => {
       navigate("/");
     } catch (error: any) {
       console.error("Login: Error during login:", error);
+    } finally {
       setIsLoading(false);
     }
   };
 
+  if (authLoading) {
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>;
+  }
+
+  if (isAuthenticated) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="flex items-center justify-center min-h-screen bg-background">
       <div className="w-full max-w-md p-8 space-y-6 bg-card rounded-lg shadow-lg">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">Sistema Integrado Municipal</h1>
+        <div className="space-y-2 text-center">
+          <h1 className="text-3xl font-bold">Login</h1>
           <p className="text-muted-foreground">
-            Faça login para acessar o sistema
+            Entre com suas credenciais para acessar o sistema
           </p>
         </div>
 
@@ -73,7 +89,7 @@ const Login = () => {
                   <FormControl>
                     <Input
                       type="email"
-                      placeholder="seu.email@exemplo.com"
+                      placeholder="seu@email.com"
                       disabled={isLoading}
                       {...field}
                     />
@@ -92,7 +108,7 @@ const Login = () => {
                   <FormControl>
                     <Input
                       type="password"
-                      placeholder="Sua senha"
+                      placeholder="••••••"
                       disabled={isLoading}
                       {...field}
                     />
@@ -102,12 +118,15 @@ const Login = () => {
               )}
             />
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
-            >
-              {isLoading ? "Entrando..." : "Entrar"}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Entrando...
+                </>
+              ) : (
+                "Entrar"
+              )}
             </Button>
           </form>
         </Form>
