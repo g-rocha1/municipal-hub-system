@@ -17,48 +17,57 @@ import GoalList from "./pages/goals/GoalList";
 import GoalAdd from "./pages/goals/GoalAdd";
 import GoalEdit from "./pages/goals/GoalEdit";
 
-const queryClient = new QueryClient();
+function App() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: 1,
+        refetchOnWindowFocus: false,
+      },
+    },
+  });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/*"
-              element={
-                <ProtectedRoute>
-                  <div className="min-h-screen bg-background">
-                    <Sidebar />
-                    <Header />
-                    <main className="pl-16 pt-14">
-                      <div className="container py-6">
-                        <Routes>
-                          <Route path="/" element={<Index />} />
-                          <Route path="/users" element={<UserList />} />
-                          <Route path="/users/add" element={<UserAdd />} />
-                          <Route path="/users/edit/:id" element={<UserEdit />} />
-                          <Route path="/users/change-password" element={<ChangePassword />} />
-                          <Route path="/goals" element={<GoalList />} />
-                          <Route path="/goals/add" element={<GoalAdd />} />
-                          <Route path="/goals/edit/:id" element={<GoalEdit />} />
-                          <Route path="*" element={<Navigate to="/" replace />} />
-                        </Routes>
-                      </div>
-                    </main>
-                  </div>
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/*"
+                element={
+                  <ProtectedRoute>
+                    <div className="min-h-screen bg-background">
+                      <Sidebar />
+                      <Header />
+                      <main className="pl-16 pt-14">
+                        <div className="container py-6">
+                          <Routes>
+                            <Route path="/" element={<Index />} />
+                            <Route path="/users" element={<UserList />} />
+                            <Route path="/users/add" element={<UserAdd />} />
+                            <Route path="/users/edit/:id" element={<UserEdit />} />
+                            <Route path="/users/change-password" element={<ChangePassword />} />
+                            <Route path="/goals" element={<GoalList />} />
+                            <Route path="/goals/add" element={<GoalAdd />} />
+                            <Route path="/goals/edit/:id" element={<GoalEdit />} />
+                            <Route path="*" element={<Navigate to="/" replace />} />
+                          </Routes>
+                        </div>
+                      </main>
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
