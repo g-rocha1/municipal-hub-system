@@ -26,6 +26,7 @@ import { Plus, Check, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Database } from "@/integrations/supabase/types";
+import { cn } from "@/lib/utils";  // Added this import
 
 type TaskStatus = Database["public"]["Enums"]["task_status"];
 
