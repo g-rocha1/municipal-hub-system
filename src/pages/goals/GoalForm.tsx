@@ -22,17 +22,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import TaskForm from "@/components/goals/TaskForm";
-import { Plus, Check, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Database } from "@/integrations/supabase/types";
-import { cn } from "@/lib/utils";  // Added this import
+import { cn } from "@/lib/utils";
 
 type TaskStatus = Database["public"]["Enums"]["task_status"];
+type GoalType = Database["public"]["Tables"]["goals"]["Row"]["goal_type"];
 
 interface GoalFormData {
   year: number;
-  type: "receita" | "despesa";
+  goal_type: GoalType;
   target_amount: number;
   current_amount: number;
   description: string;
@@ -53,6 +54,18 @@ interface GoalFormProps {
   };
 }
 
+const GOAL_TYPES: { value: GoalType; label: string }[] = [
+  { value: "financeira", label: "Financeira" },
+  { value: "educacional", label: "Educacional" },
+  { value: "saude", label: "Saúde" },
+  { value: "infraestrutura", label: "Infraestrutura" },
+  { value: "social", label: "Social" },
+  { value: "ambiental", label: "Ambiental" },
+  { value: "cultural", label: "Cultural" },
+  { value: "esporte", label: "Esporte" },
+  { value: "outros", label: "Outros" },
+];
+
 const GoalForm = ({ initialData }: GoalFormProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -63,7 +76,7 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
   const form = useForm<GoalFormData>({
     defaultValues: {
       year: initialData?.year || new Date().getFullYear(),
-      type: initialData?.type || "receita",
+      goal_type: initialData?.goal_type || "financeira",
       target_amount: initialData?.target_amount || 0,
       current_amount: initialData?.current_amount || 0,
       description: initialData?.description || "",
@@ -90,10 +103,10 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
 
       if (isEditing) {
         const { error } = await supabase
-          .from("financial_goals")
+          .from("goals")
           .update({
             year: values.year,
-            type: values.type,
+            goal_type: values.goal_type,
             target_amount: values.target_amount,
             current_amount: values.current_amount,
             description: values.description,
@@ -105,10 +118,10 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
         toast.success("Meta atualizada com sucesso!");
       } else {
         const { data, error } = await supabase
-          .from("financial_goals")
+          .from("goals")
           .insert({
             year: values.year,
-            type: values.type,
+            goal_type: values.goal_type,
             target_amount: values.target_amount,
             current_amount: values.current_amount,
             description: values.description,
@@ -122,7 +135,6 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
         toast.success("Meta criada com sucesso!");
       }
 
-      // Insert tasks
       if (tasks.length > 0) {
         const { error: tasksError } = await supabase.from("goal_tasks").insert(
           tasks.map((task) => ({
@@ -160,8 +172,8 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
         </h2>
         <p className="text-muted-foreground">
           {isEditing
-            ? "Atualize os dados da meta financeira"
-            : "Preencha os dados para criar uma nova meta financeira"}
+            ? "Atualize os dados da meta"
+            : "Preencha os dados para criar uma nova meta"}
         </p>
       </div>
 
@@ -187,19 +199,22 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
 
           <FormField
             control={form.control}
-            name="type"
+            name="goal_type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Tipo</FormLabel>
+                <FormLabel>Tipo de Meta</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo" />
+                      <SelectValue placeholder="Selecione o tipo de meta" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="receita">Receita</SelectItem>
-                    <SelectItem value="despesa">Despesa</SelectItem>
+                    {GOAL_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />

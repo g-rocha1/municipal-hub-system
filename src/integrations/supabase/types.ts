@@ -359,6 +359,44 @@ export type Database = {
         }
         Relationships: []
       }
+      goals: {
+        Row: {
+          id: string
+          year: number
+          target_amount: number
+          current_amount: number | null
+          description: string
+          created_at: string
+          updated_at: string
+          created_by: string
+          progress: number | null
+          goal_type: 'financeira' | 'educacional' | 'saude' | 'infraestrutura' | 'social' | 'ambiental' | 'cultural' | 'esporte' | 'outros'
+        }
+        Insert: {
+          id?: string
+          year: number
+          target_amount: number
+          current_amount?: number | null
+          description: string
+          created_at?: string
+          updated_at?: string
+          created_by: string
+          progress?: number | null
+          goal_type: 'financeira' | 'educacional' | 'saude' | 'infraestrutura' | 'social' | 'ambiental' | 'cultural' | 'esporte' | 'outros'
+        }
+        Update: {
+          id?: string
+          year?: number
+          target_amount?: number
+          current_amount?: number | null
+          description?: string
+          created_at?: string
+          updated_at?: string
+          created_by?: string
+          progress?: number | null
+          goal_type?: 'financeira' | 'educacional' | 'saude' | 'infraestrutura' | 'social' | 'ambiental' | 'cultural' | 'esporte' | 'outros'
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -401,7 +439,7 @@ export type Tables<
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
         Database[PublicTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
       Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
