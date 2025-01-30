@@ -1,21 +1,22 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { Sonner } from "sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { Header } from "@/components/Header";
-import { Sidebar } from "@/components/Sidebar";
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import UserList from "./pages/users/UserList";
-import UserAdd from "./pages/users/UserAdd";
-import UserEdit from "./pages/users/UserEdit";
-import ChangePassword from "./pages/users/ChangePassword";
-import GoalList from "./pages/goals/GoalList";
-import GoalAdd from "./pages/goals/GoalAdd";
-import GoalEdit from "./pages/goals/GoalEdit";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import Sidebar from "@/components/Sidebar";
+import Header from "@/components/Header";
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import UserList from "@/pages/users/UserList";
+import UserAdd from "@/pages/users/UserAdd";
+import UserEdit from "@/pages/users/UserEdit";
+import ChangePassword from "@/pages/users/ChangePassword";
+import GoalList from "@/pages/goals/GoalList";
+import GoalAdd from "@/pages/goals/GoalAdd";
+import GoalEdit from "@/pages/goals/GoalEdit";
+import GoalDashboard from "@/pages/goals/GoalDashboard";
 
 function App() {
   const queryClient = new QueryClient({
@@ -52,6 +53,7 @@ function App() {
                             <Route path="/users/edit/:id" element={<UserEdit />} />
                             <Route path="/users/change-password" element={<ChangePassword />} />
                             <Route path="/goals" element={<GoalList />} />
+                            <Route path="/goals/dashboard" element={<GoalDashboard />} />
                             <Route path="/goals/add" element={<GoalAdd />} />
                             <Route path="/goals/edit/:id" element={<GoalEdit />} />
                             <Route path="*" element={<Navigate to="/" replace />} />

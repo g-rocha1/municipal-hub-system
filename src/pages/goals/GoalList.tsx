@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, BarChart2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Table,
@@ -74,10 +74,16 @@ const GoalList = () => {
             Gerencie as metas da sua secretaria
           </p>
         </div>
-        <Button onClick={() => navigate("/goals/add")}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nova Meta
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate("/goals/dashboard")}>
+            <BarChart2 className="mr-2 h-4 w-4" />
+            Dashboard
+          </Button>
+          <Button onClick={() => navigate("/goals/add")}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nova Meta
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-2 mb-4">
