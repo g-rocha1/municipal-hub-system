@@ -34,8 +34,6 @@ type GoalType = Database["public"]["Tables"]["goals"]["Row"]["goal_type"];
 interface GoalFormData {
   year: number;
   goal_type: GoalType;
-  target_amount: number;
-  current_amount: number;
   description: string;
 }
 
@@ -77,8 +75,6 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
     defaultValues: {
       year: initialData?.year || new Date().getFullYear(),
       goal_type: initialData?.goal_type || "financeira",
-      target_amount: initialData?.target_amount || 0,
-      current_amount: initialData?.current_amount || 0,
       description: initialData?.description || "",
     },
   });
@@ -107,8 +103,6 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
           .update({
             year: values.year,
             goal_type: values.goal_type,
-            target_amount: values.target_amount,
-            current_amount: values.current_amount,
             description: values.description,
           })
           .eq("id", initialData.id);
@@ -122,8 +116,6 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
           .insert({
             year: values.year,
             goal_type: values.goal_type,
-            target_amount: values.target_amount,
-            current_amount: values.current_amount,
             description: values.description,
             created_by: user.id,
           })
@@ -217,44 +209,6 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
                     ))}
                   </SelectContent>
                 </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="target_amount"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Valor da Meta</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="current_amount"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Valor Atual</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                  />
-                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus, BarChart2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -12,8 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 
 const GOAL_TYPE_LABELS: Record<string, string> = {
   financeira: "Financeira",
@@ -36,7 +35,7 @@ const GoalList = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("goals")
-        .select("*")
+        .select("*, goal_tasks(*)")
         .eq("year", selectedYear)
         .order("created_at", { ascending: false });
 
@@ -50,19 +49,11 @@ const GoalList = () => {
     (_, i) => new Date().getFullYear() - 2 + i
   );
 
-  const getGoalTypeColor = (type: string) => {
-    const colors: Record<string, string> = {
-      financeira: "bg-green-100 text-green-800",
-      educacional: "bg-blue-100 text-blue-800",
-      saude: "bg-red-100 text-red-800",
-      infraestrutura: "bg-yellow-100 text-yellow-800",
-      social: "bg-purple-100 text-purple-800",
-      ambiental: "bg-emerald-100 text-emerald-800",
-      cultural: "bg-pink-100 text-pink-800",
-      esporte: "bg-orange-100 text-orange-800",
-      outros: "bg-gray-100 text-gray-800",
-    };
-    return colors[type] || colors.outros;
+  const getProgressColor = (progress: number) => {
+    if (progress >= 75) return "bg-green-500";
+    if (progress >= 50) return "bg-yellow-500";
+    if (progress >= 25) return "bg-orange-500";
+    return "bg-red-500";
   };
 
   return (
@@ -98,22 +89,24 @@ const GoalList = () => {
         ))}
       </div>
 
-      {isLoading ? (
-        <div>Carregando...</div>
-      ) : (
-        <div className="border rounded-lg">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Meta</TableHead>
-                <TableHead>Atual</TableHead>
-                <TableHead>Progresso</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {goals?.map((goal) => (
+      <div className="border rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Descrição</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Progresso</TableHead>
+              <TableHead>Tarefas</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {goals?.map((goal) => {
+              const totalTasks = goal.goal_tasks?.length || 0;
+              const completedTasks = goal.goal_tasks?.filter(
+                (task) => task.status === "concluida"
+              ).length || 0;
+
+              return (
                 <TableRow
                   key={goal.id}
                   className="cursor-pointer hover:bg-muted/50"
@@ -121,38 +114,41 @@ const GoalList = () => {
                 >
                   <TableCell>{goal.description}</TableCell>
                   <TableCell>
-                    <Badge className={getGoalTypeColor(goal.goal_type)}>
+                    <Badge variant="outline">
                       {GOAL_TYPE_LABELS[goal.goal_type]}
                     </Badge>
                   </TableCell>
-                  <TableCell>{formatCurrency(goal.target_amount)}</TableCell>
-                  <TableCell>{formatCurrency(goal.current_amount)}</TableCell>
                   <TableCell>
-                    <div className="w-full bg-secondary rounded-full h-2.5">
-                      <div
-                        className="h-2.5 rounded-full bg-primary"
-                        style={{
-                          width: `${Math.min(
-                            (goal.current_amount / goal.target_amount) * 100,
-                            100
-                          )}%`,
-                        }}
-                      ></div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${getProgressColor(goal.progress)}`}
+                          style={{ width: `${goal.progress}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium">
+                        {goal.progress?.toFixed(0)}%
+                      </span>
                     </div>
                   </TableCell>
-                </TableRow>
-              ))}
-              {goals?.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-6">
-                    Nenhuma meta encontrada para o ano selecionado
+                  <TableCell>
+                    <span className="text-sm">
+                      {completedTasks} / {totalTasks}
+                    </span>
                   </TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+              );
+            })}
+            {goals?.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-6">
+                  Nenhuma meta encontrada para o ano selecionado
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };

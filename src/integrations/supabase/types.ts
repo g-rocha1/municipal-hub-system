@@ -199,36 +199,30 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string
-          current_amount: number | null
           description: string
           goal_type: Database["public"]["Enums"]["goal_type"]
           id: string
           progress: number | null
-          target_amount: number
           updated_at: string
           year: number
         }
         Insert: {
           created_at?: string
           created_by: string
-          current_amount?: number | null
           description: string
           goal_type?: Database["public"]["Enums"]["goal_type"]
           id?: string
           progress?: number | null
-          target_amount: number
           updated_at?: string
           year: number
         }
         Update: {
           created_at?: string
           created_by?: string
-          current_amount?: number | null
           description?: string
           goal_type?: Database["public"]["Enums"]["goal_type"]
           id?: string
           progress?: number | null
-          target_amount?: number
           updated_at?: string
           year?: number
         }
