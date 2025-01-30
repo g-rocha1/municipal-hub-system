@@ -43,15 +43,6 @@ export type Database = {
           status?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "event_registrations_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       events: {
         Row: {
@@ -96,15 +87,6 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "events_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       financial_goals: {
         Row: {
@@ -117,6 +99,7 @@ export type Database = {
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at: string
           year: number
+          progress: number | null
         }
         Insert: {
           created_at?: string
@@ -128,6 +111,7 @@ export type Database = {
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
           year: number
+          progress?: number | null
         }
         Update: {
           created_at?: string
@@ -139,8 +123,46 @@ export type Database = {
           type?: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
           year?: number
+          progress?: number | null
         }
-        Relationships: []
+      }
+      goal_tasks: {
+        Row: {
+          id: string
+          goal_id: string
+          title: string
+          description: string | null
+          status: Database["public"]["Enums"]["task_status"]
+          due_date: string | null
+          weight: number | null
+          created_at: string
+          updated_at: string
+          created_by: string
+        }
+        Insert: {
+          id?: string
+          goal_id: string
+          title: string
+          description?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          due_date?: string | null
+          weight?: number | null
+          created_at?: string
+          updated_at?: string
+          created_by: string
+        }
+        Update: {
+          id?: string
+          goal_id?: string
+          title?: string
+          description?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          due_date?: string | null
+          weight?: number | null
+          created_at?: string
+          updated_at?: string
+          created_by?: string
+        }
       }
       financial_transactions: {
         Row: {
@@ -329,6 +351,7 @@ export type Database = {
       project_status: "planejamento" | "execucao" | "concluido" | "cancelado"
       transaction_type: "receita" | "despesa"
       user_role: "master" | "prefeito" | "secretario" | "user"
+      task_status: "pendente" | "em_andamento" | "concluida" | "atrasada" | "em_espera"
     }
     CompositeTypes: {
       [_ in never]: never

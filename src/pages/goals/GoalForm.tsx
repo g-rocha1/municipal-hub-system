@@ -20,6 +20,14 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
+import TaskForm from "@/components/goals/TaskForm";
+import { Plus, Check, X } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Database } from "@/integrations/supabase/types";
+
+type TaskStatus = Database["public"]["Enums"]["task_status"];
 
 interface GoalFormData {
   year: number;
@@ -27,6 +35,15 @@ interface GoalFormData {
   target_amount: number;
   current_amount: number;
   description: string;
+}
+
+interface Task {
+  id?: string;
+  title: string;
+  description?: string;
+  status: TaskStatus;
+  due_date?: string;
+  weight: number;
 }
 
 interface GoalFormProps {
@@ -39,6 +56,8 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isEditing = !!initialData;
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [showTaskForm, setShowTaskForm] = useState(false);
 
   const form = useForm<GoalFormData>({
     defaultValues: {
@@ -50,12 +69,23 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
     },
   });
 
+  const handleAddTask = (task: Task) => {
+    setTasks([...tasks, task]);
+    setShowTaskForm(false);
+  };
+
+  const handleRemoveTask = (index: number) => {
+    setTasks(tasks.filter((_, i) => i !== index));
+  };
+
   const onSubmit = async (values: GoalFormData) => {
     try {
       if (!user) {
         toast.error("Usuário não autenticado");
         return;
       }
+
+      let goalId: string;
 
       if (isEditing) {
         const { error } = await supabase
@@ -70,25 +100,55 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
           .eq("id", initialData.id);
 
         if (error) throw error;
+        goalId = initialData.id;
         toast.success("Meta atualizada com sucesso!");
       } else {
-        const { error } = await supabase.from("financial_goals").insert({
-          year: values.year,
-          type: values.type,
-          target_amount: values.target_amount,
-          current_amount: values.current_amount,
-          description: values.description,
-          created_by: user.id,
-        });
+        const { data, error } = await supabase
+          .from("financial_goals")
+          .insert({
+            year: values.year,
+            type: values.type,
+            target_amount: values.target_amount,
+            current_amount: values.current_amount,
+            description: values.description,
+            created_by: user.id,
+          })
+          .select()
+          .single();
 
         if (error) throw error;
+        goalId = data.id;
         toast.success("Meta criada com sucesso!");
+      }
+
+      // Insert tasks
+      if (tasks.length > 0) {
+        const { error: tasksError } = await supabase.from("goal_tasks").insert(
+          tasks.map((task) => ({
+            ...task,
+            goal_id: goalId,
+            created_by: user.id,
+          }))
+        );
+
+        if (tasksError) throw tasksError;
       }
 
       navigate("/goals");
     } catch (error: any) {
       toast.error(error.message || "Ocorreu um erro ao salvar a meta");
     }
+  };
+
+  const getStatusColor = (status: TaskStatus) => {
+    const colors = {
+      pendente: "bg-yellow-500",
+      em_andamento: "bg-blue-500",
+      concluida: "bg-green-500",
+      atrasada: "bg-red-500",
+      em_espera: "bg-gray-500",
+    };
+    return colors[status];
   };
 
   return (
@@ -113,9 +173,9 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
               <FormItem>
                 <FormLabel>Ano</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
-                    {...field} 
+                  <Input
+                    type="number"
+                    {...field}
                     onChange={(e) => field.onChange(Number(e.target.value))}
                   />
                 </FormControl>
@@ -130,10 +190,7 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Tipo</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o tipo" />
@@ -156,9 +213,9 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
               <FormItem>
                 <FormLabel>Valor da Meta</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
-                    step="0.01" 
+                  <Input
+                    type="number"
+                    step="0.01"
                     {...field}
                     onChange={(e) => field.onChange(Number(e.target.value))}
                   />
@@ -175,9 +232,9 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
               <FormItem>
                 <FormLabel>Valor Atual</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
-                    step="0.01" 
+                  <Input
+                    type="number"
+                    step="0.01"
                     {...field}
                     onChange={(e) => field.onChange(Number(e.target.value))}
                   />
@@ -200,6 +257,57 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
               </FormItem>
             )}
           />
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Tarefas</CardTitle>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowTaskForm(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Tarefa
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {showTaskForm ? (
+                <TaskForm
+                  goalId={initialData?.id || ""}
+                  onSubmit={handleAddTask}
+                  onCancel={() => setShowTaskForm(false)}
+                />
+              ) : (
+                <div className="space-y-2">
+                  {tasks.map((task, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-2 border rounded-lg"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium">{task.title}</span>
+                        <Badge
+                          variant="secondary"
+                          className={cn("text-white", getStatusColor(task.status))}
+                        >
+                          {task.status}
+                        </Badge>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveTask(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           <div className="flex gap-4">
             <Button type="submit">
