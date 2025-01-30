@@ -72,7 +72,7 @@ const Index = () => {
 
   const progressData = goals.map(goal => ({
     name: goal.description,
-    progress: (goal.current_amount / goal.target_amount) * 100,
+    progress: goal.progress || 0,
     type: GOAL_TYPE_LABELS[goal.goal_type],
   }));
 
