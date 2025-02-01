@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -27,35 +26,34 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 type TaskStatus = Database["public"]["Enums"]["task_status"];
 
 interface TaskFormData {
   title: string;
-  description?: string;
+  description: string;
   status: TaskStatus;
-  due_date?: string;
   weight: number;
 }
 
 interface TaskFormProps {
-  goalId: string;
-  onSubmit: (data: TaskFormData) => void;
-  onCancel: () => void;
-  initialData?: TaskFormData;
+  onSubmit: (data: TaskFormData & { due_date?: string }) => void;
+  defaultValues?: Partial<TaskFormData & { due_date?: string }>;
 }
 
-const TaskForm = ({ goalId, onSubmit, onCancel, initialData }: TaskFormProps) => {
-  const [date, setDate] = useState<Date | undefined>(
-    initialData?.due_date ? new Date(initialData.due_date) : undefined
+export function TaskForm({ onSubmit, defaultValues }: TaskFormProps) {
+  const { user } = useAuth();
+  const [date, setDate] = React.useState<Date | undefined>(
+    defaultValues?.due_date ? new Date(defaultValues.due_date) : undefined
   );
 
   const form = useForm<TaskFormData>({
     defaultValues: {
-      title: initialData?.title || "",
-      description: initialData?.description || "",
-      status: initialData?.status || "pendente",
-      weight: initialData?.weight || 1,
+      title: defaultValues?.title || "",
+      description: defaultValues?.description || "",
+      status: defaultValues?.status || "pendente",
+      weight: defaultValues?.weight || 1,
     },
   });
 
@@ -70,6 +68,8 @@ const TaskForm = ({ goalId, onSubmit, onCancel, initialData }: TaskFormProps) =>
   const setPriority = (priority: number) => {
     form.setValue("weight", priority);
   };
+
+  if (!user) return null;
 
   return (
     <Form {...form}>
@@ -118,8 +118,7 @@ const TaskForm = ({ goalId, onSubmit, onCancel, initialData }: TaskFormProps) =>
                   <SelectItem value="pendente">Pendente</SelectItem>
                   <SelectItem value="em_andamento">Em Andamento</SelectItem>
                   <SelectItem value="concluida">Concluída</SelectItem>
-                  <SelectItem value="atrasada">Atrasada</SelectItem>
-                  <SelectItem value="em_espera">Em Espera</SelectItem>
+                  <SelectItem value="cancelada">Cancelada</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -128,25 +127,30 @@ const TaskForm = ({ goalId, onSubmit, onCancel, initialData }: TaskFormProps) =>
         />
 
         <FormItem>
-          <FormLabel>Data de Vencimento</FormLabel>
+          <FormLabel>Data de Conclusão</FormLabel>
           <Popover>
             <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !date && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? format(date, "PPP") : "Selecione uma data"}
-              </Button>
+              <FormControl>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full pl-3 text-left font-normal",
+                    !date && "text-muted-foreground"
+                  )}
+                >
+                  {date ? format(date, "dd/MM/yyyy") : "Selecione uma data"}
+                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                </Button>
+              </FormControl>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
                 selected={date}
                 onSelect={setDate}
+                disabled={(date) =>
+                  date < new Date(new Date().setHours(0, 0, 0, 0))
+                }
                 initialFocus
               />
             </PopoverContent>
@@ -193,17 +197,10 @@ const TaskForm = ({ goalId, onSubmit, onCancel, initialData }: TaskFormProps) =>
           )}
         />
 
-        <div className="flex gap-4">
-          <Button type="submit">
-            {initialData ? "Atualizar" : "Adicionar"} Tarefa
-          </Button>
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancelar
-          </Button>
+        <div className="flex justify-end">
+          <Button type="submit">Salvar</Button>
         </div>
       </form>
     </Form>
   );
-};
-
-export default TaskForm;
+}
