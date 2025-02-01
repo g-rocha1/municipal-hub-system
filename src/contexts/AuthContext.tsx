@@ -94,9 +94,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password: senha,
-        options: {
-          redirectTo: window.location.origin,
-        },
       });
 
       if (error) throw error;
