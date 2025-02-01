@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { Database } from "@/integrations/supabase/types";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, ArrowUp, ArrowDown } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -60,10 +60,15 @@ const TaskForm = ({ goalId, onSubmit, onCancel, initialData }: TaskFormProps) =>
   });
 
   const handleSubmit = (values: TaskFormData) => {
-    onSubmit({
+    const formData = {
       ...values,
       due_date: date?.toISOString().split("T")[0],
-    });
+    };
+    onSubmit(formData);
+  };
+
+  const setPriority = (priority: number) => {
+    form.setValue("weight", priority);
   };
 
   return (
@@ -74,9 +79,9 @@ const TaskForm = ({ goalId, onSubmit, onCancel, initialData }: TaskFormProps) =>
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Título</FormLabel>
+              <FormLabel>Título da Tarefa</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} placeholder="Digite o título da tarefa" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -90,7 +95,7 @@ const TaskForm = ({ goalId, onSubmit, onCancel, initialData }: TaskFormProps) =>
             <FormItem>
               <FormLabel>Descrição</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} placeholder="Digite a descrição da tarefa" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -153,16 +158,36 @@ const TaskForm = ({ goalId, onSubmit, onCancel, initialData }: TaskFormProps) =>
           name="weight"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Peso</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  min="1"
-                  max="10"
-                  {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
-                />
-              </FormControl>
+              <FormLabel>Prioridade</FormLabel>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={field.value === 1 ? "default" : "outline"}
+                  onClick={() => setPriority(1)}
+                  className="flex-1"
+                >
+                  <ArrowDown className="mr-2 h-4 w-4" />
+                  Baixa
+                </Button>
+                <Button
+                  type="button"
+                  variant={field.value === 2 ? "default" : "outline"}
+                  onClick={() => setPriority(2)}
+                  className="flex-1"
+                >
+                  <ArrowUp className="mr-2 h-4 w-4 text-yellow-500" />
+                  Média
+                </Button>
+                <Button
+                  type="button"
+                  variant={field.value === 3 ? "default" : "outline"}
+                  onClick={() => setPriority(3)}
+                  className="flex-1"
+                >
+                  <ArrowUp className="mr-2 h-4 w-4 text-red-500" />
+                  Alta
+                </Button>
+              </div>
               <FormMessage />
             </FormItem>
           )}
