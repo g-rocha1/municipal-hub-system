@@ -37,23 +37,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Error fetching user profile:", error);
       handleSignOut();
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSignOut = async () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error("Error signing out:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
-    let mounted = true;
-
     const initializeAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
 
-        if (session?.user?.id && mounted) {
+        if (session?.user?.id) {
           await fetchUserProfile(session.user.id);
         } else {
           handleSignOut();
@@ -62,28 +68,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Error in initial auth check:", error);
         handleSignOut();
       } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
+        setIsLoading(false);
       }
     };
 
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-
-      console.log("Auth state changed:", event, session);
-
-      if (session?.user?.id) {
+      if (event === 'SIGNED_IN' && session?.user?.id) {
         await fetchUserProfile(session.user.id);
-      } else {
+      } else if (event === 'SIGNED_OUT') {
         handleSignOut();
       }
     });
 
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
