@@ -24,8 +24,8 @@ function App() {
       queries: {
         retry: 1,
         refetchOnWindowFocus: false,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+        staleTime: 2 * 60 * 1000, // 2 minutos
+        gcTime: 5 * 60 * 1000, // 5 minutos
       },
     },
   });

@@ -40,18 +40,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     setUser(null);
     setIsAuthenticated(false);
+    await supabase.auth.signOut();
   };
 
   useEffect(() => {
+    let mounted = true;
+
     const initializeAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        console.log("Initial session check:", session);
 
-        if (session?.user?.id) {
+        if (session?.user?.id && mounted) {
           await fetchUserProfile(session.user.id);
         } else {
           handleSignOut();
@@ -60,13 +62,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Error in initial auth check:", error);
         handleSignOut();
       } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+
       console.log("Auth state changed:", event, session);
 
       if (session?.user?.id) {
@@ -74,13 +80,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         handleSignOut();
       }
-      
-      if (event === 'SIGNED_OUT') {
-        handleSignOut();
-      }
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -91,6 +94,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password: senha,
+        options: {
+          redirectTo: window.location.origin,
+        },
       });
 
       if (error) throw error;
@@ -115,10 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      handleSignOut();
+      await handleSignOut();
       toast.success("Logout realizado com sucesso!");
     } catch (error: any) {
       toast.error(error.message || "Erro ao fazer logout");
