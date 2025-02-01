@@ -36,7 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error("Error fetching user profile:", error);
-      handleSignOut();
+      setUser(null);
+      setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
     }
@@ -45,11 +46,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      setUser(null);
-      setIsAuthenticated(false);
     } catch (error) {
       console.error("Error signing out:", error);
     } finally {
+      setUser(null);
+      setIsAuthenticated(false);
       setIsLoading(false);
     }
   };
@@ -58,15 +59,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initializeAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-
         if (session?.user?.id) {
           await fetchUserProfile(session.user.id);
         } else {
-          handleSignOut();
+          setUser(null);
+          setIsAuthenticated(false);
         }
       } catch (error) {
         console.error("Error in initial auth check:", error);
-        handleSignOut();
+        setUser(null);
+        setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
       }
@@ -78,7 +80,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === 'SIGNED_IN' && session?.user?.id) {
         await fetchUserProfile(session.user.id);
       } else if (event === 'SIGNED_OUT') {
-        handleSignOut();
+        setUser(null);
+        setIsAuthenticated(false);
+        setIsLoading(false);
       }
     });
 
@@ -121,8 +125,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast.success("Logout realizado com sucesso!");
     } catch (error: any) {
       toast.error(error.message || "Erro ao fazer logout");
-    } finally {
-      setIsLoading(false);
     }
   };
 

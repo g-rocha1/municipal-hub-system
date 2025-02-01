@@ -42,6 +42,8 @@ export default function Login() {
   }, [isAuthenticated, navigate]);
 
   const onSubmit = async (data: LoginForm) => {
+    if (isSubmitting) return;
+    
     try {
       setIsSubmitting(true);
       await login(data.email, data.senha);
