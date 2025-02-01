@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -42,9 +43,9 @@ interface TaskFormProps {
   defaultValues?: Partial<TaskFormData & { due_date?: string }>;
 }
 
-export function TaskForm({ onSubmit, defaultValues }: TaskFormProps) {
+export const TaskForm = ({ onSubmit, defaultValues }: TaskFormProps) => {
   const { user } = useAuth();
-  const [date, setDate] = React.useState<Date | undefined>(
+  const [date, setDate] = useState<Date | undefined>(
     defaultValues?.due_date ? new Date(defaultValues.due_date) : undefined
   );
 

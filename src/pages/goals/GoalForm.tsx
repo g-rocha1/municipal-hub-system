@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
-import TaskForm from "@/components/goals/TaskForm";
+import { TaskForm } from "@/components/goals/TaskForm";
 import { Plus, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -244,9 +244,8 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
             <CardContent>
               {showTaskForm ? (
                 <TaskForm
-                  goalId={initialData?.id || ""}
                   onSubmit={handleAddTask}
-                  onCancel={() => setShowTaskForm(false)}
+                  defaultValues={{}}
                 />
               ) : (
                 <div className="space-y-2">
