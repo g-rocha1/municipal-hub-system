@@ -61,12 +61,19 @@ export const TaskForm = ({ onSubmit, defaultValues }: TaskFormProps) => {
 
   const handleSubmit = async (values: TaskFormData) => {
     try {
+      console.log("TaskForm - Iniciando submissão", values);
       setIsSubmitting(true);
       const formData = {
         ...values,
         due_date: date?.toISOString().split("T")[0],
       };
+      console.log("TaskForm - Dados formatados", formData);
       await onSubmit(formData);
+      console.log("TaskForm - Submissão concluída");
+      form.reset();
+      setDate(undefined);
+    } catch (error) {
+      console.error("TaskForm - Erro na submissão:", error);
     } finally {
       setIsSubmitting(false);
     }

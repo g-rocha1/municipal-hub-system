@@ -28,7 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Database } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
 
-type TaskStatus = Database["public"]["Enums"]["task_status"];
+type TaskStatus = Database["public"]["Tables"]["goal_tasks"]["Row"]["status"];
 type GoalType = Database["public"]["Tables"]["goals"]["Row"]["goal_type"];
 
 interface GoalFormData {
@@ -83,6 +83,7 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
   });
 
   const handleAddTask = (task: Task) => {
+    console.log("GoalForm - Adicionando tarefa:", task);
     setTasks([...tasks, task]);
     setShowTaskForm(false);
   };
@@ -98,6 +99,7 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
         return;
       }
 
+      console.log("GoalForm - Iniciando submissão", { values, tasks });
       setIsSubmitting(true);
       let goalId: string;
 
@@ -130,10 +132,12 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
 
         if (error) throw error;
         goalId = data.id;
+        console.log("GoalForm - Meta criada:", data);
         toast.success("Meta criada com sucesso!");
       }
 
       if (tasks.length > 0) {
+        console.log("GoalForm - Inserindo tarefas:", tasks);
         const { error: tasksError } = await supabase.from("goal_tasks").insert(
           tasks.map((task) => ({
             ...task,
@@ -142,11 +146,16 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
           }))
         );
 
-        if (tasksError) throw tasksError;
+        if (tasksError) {
+          console.error("GoalForm - Erro ao inserir tarefas:", tasksError);
+          throw tasksError;
+        }
+        console.log("GoalForm - Tarefas inseridas com sucesso");
       }
 
       navigate("/goals");
     } catch (error: any) {
+      console.error("GoalForm - Erro na submissão:", error);
       toast.error(error.message || "Ocorreu um erro ao salvar a meta");
     } finally {
       setIsSubmitting(false);
@@ -265,10 +274,9 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
             </CardHeader>
             <CardContent>
               {showTaskForm ? (
-                <TaskForm
-                  onSubmit={handleAddTask}
-                  defaultValues={{}}
-                />
+                <div className="space-y-4">
+                  <TaskForm onSubmit={handleAddTask} />
+                </div>
               ) : (
                 <div className="space-y-2">
                   {tasks.map((task, index) => (
