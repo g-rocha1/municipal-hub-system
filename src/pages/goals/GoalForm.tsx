@@ -1,51 +1,14 @@
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
-import { TaskForm } from "@/components/goals/TaskForm";
-import { Plus, X } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Database } from "@/integrations/supabase/types";
-import { cn } from "@/lib/utils";
-
-type TaskStatus = Database["public"]["Tables"]["goal_tasks"]["Row"]["status"];
-type GoalType = Database["public"]["Tables"]["goals"]["Row"]["goal_type"];
-
-interface GoalFormData {
-  title: string;
-  year: number;
-  goal_type: GoalType;
-  description: string;
-}
-
-interface Task {
-  id?: string;
-  title: string;
-  description?: string;
-  status: TaskStatus;
-  due_date?: string;
-  weight: number;
-}
+import { GoalFormFields } from "@/components/goals/GoalFormFields";
+import { TaskManager } from "@/components/goals/TaskManager";
+import { GoalFormData, Task } from "@/components/goals/types";
 
 interface GoalFormProps {
   initialData?: GoalFormData & {
@@ -53,24 +16,11 @@ interface GoalFormProps {
   };
 }
 
-const GOAL_TYPES: { value: GoalType; label: string }[] = [
-  { value: "financeira", label: "Financeira" },
-  { value: "educacional", label: "Educacional" },
-  { value: "saude", label: "Saúde" },
-  { value: "infraestrutura", label: "Infraestrutura" },
-  { value: "social", label: "Social" },
-  { value: "ambiental", label: "Ambiental" },
-  { value: "cultural", label: "Cultural" },
-  { value: "esporte", label: "Esporte" },
-  { value: "outros", label: "Outros" },
-];
-
 const GoalForm = ({ initialData }: GoalFormProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isEditing = !!initialData;
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [showTaskForm, setShowTaskForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<GoalFormData>({
@@ -85,7 +35,6 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
   const handleAddTask = (task: Task) => {
     console.log("GoalForm - Adicionando tarefa:", task);
     setTasks([...tasks, task]);
-    setShowTaskForm(false);
   };
 
   const handleRemoveTask = (index: number) => {
@@ -162,17 +111,6 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
     }
   };
 
-  const getStatusColor = (status: TaskStatus) => {
-    const colors = {
-      pendente: "bg-yellow-500",
-      em_andamento: "bg-blue-500",
-      concluida: "bg-green-500",
-      atrasada: "bg-red-500",
-      em_espera: "bg-gray-500",
-    };
-    return colors[status];
-  };
-
   return (
     <div className="space-y-6">
       <div>
@@ -188,125 +126,12 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Título</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Digite o título da meta" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+          <GoalFormFields form={form} />
+          <TaskManager
+            tasks={tasks}
+            onAddTask={handleAddTask}
+            onRemoveTask={handleRemoveTask}
           />
-
-          <FormField
-            control={form.control}
-            name="year"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Ano</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="goal_type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tipo de Meta</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo de meta" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {GOAL_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Descrição</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Digite a descrição da meta" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Tarefas</CardTitle>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowTaskForm(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Adicionar Tarefa
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {showTaskForm ? (
-                <div className="space-y-4">
-                  <TaskForm onSubmit={handleAddTask} />
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {tasks.map((task, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-2 border rounded-lg"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium">{task.title}</span>
-                        <Badge
-                          variant="secondary"
-                          className={cn("text-white", getStatusColor(task.status))}
-                        >
-                          {task.status}
-                        </Badge>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveTask(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
 
           <div className="flex gap-4">
             <Button type="submit" disabled={isSubmitting}>
