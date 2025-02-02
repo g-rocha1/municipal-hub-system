@@ -32,6 +32,7 @@ type TaskStatus = Database["public"]["Enums"]["task_status"];
 type GoalType = Database["public"]["Tables"]["goals"]["Row"]["goal_type"];
 
 interface GoalFormData {
+  title: string;
   year: number;
   goal_type: GoalType;
   description: string;
@@ -70,9 +71,11 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
   const isEditing = !!initialData;
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<GoalFormData>({
     defaultValues: {
+      title: initialData?.title || "",
       year: initialData?.year || new Date().getFullYear(),
       goal_type: initialData?.goal_type || "financeira",
       description: initialData?.description || "",
@@ -95,12 +98,14 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
         return;
       }
 
+      setIsSubmitting(true);
       let goalId: string;
 
       if (isEditing) {
         const { error } = await supabase
           .from("goals")
           .update({
+            title: values.title,
             year: values.year,
             goal_type: values.goal_type,
             description: values.description,
@@ -114,6 +119,7 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
         const { data, error } = await supabase
           .from("goals")
           .insert({
+            title: values.title,
             year: values.year,
             goal_type: values.goal_type,
             description: values.description,
@@ -142,6 +148,8 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
       navigate("/goals");
     } catch (error: any) {
       toast.error(error.message || "Ocorreu um erro ao salvar a meta");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -171,6 +179,20 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Título</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Digite o título da meta" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="year"
@@ -221,7 +243,7 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
               <FormItem>
                 <FormLabel>Descrição</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} placeholder="Digite a descrição da meta" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -279,8 +301,8 @@ const GoalForm = ({ initialData }: GoalFormProps) => {
           </Card>
 
           <div className="flex gap-4">
-            <Button type="submit">
-              {isEditing ? "Atualizar" : "Criar"} Meta
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Salvando..." : isEditing ? "Atualizar" : "Criar"} Meta
             </Button>
             <Button
               type="button"

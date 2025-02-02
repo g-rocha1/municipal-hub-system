@@ -203,6 +203,7 @@ export type Database = {
           goal_type: Database["public"]["Enums"]["goal_type"]
           id: string
           progress: number | null
+          title: string
           updated_at: string
           year: number
         }
@@ -213,6 +214,7 @@ export type Database = {
           goal_type?: Database["public"]["Enums"]["goal_type"]
           id?: string
           progress?: number | null
+          title?: string
           updated_at?: string
           year: number
         }
@@ -223,6 +225,7 @@ export type Database = {
           goal_type?: Database["public"]["Enums"]["goal_type"]
           id?: string
           progress?: number | null
+          title?: string
           updated_at?: string
           year?: number
         }
