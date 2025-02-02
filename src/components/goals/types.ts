@@ -1,12 +1,18 @@
 import { Database } from "@/integrations/supabase/types";
 
 export type TaskStatus = Database["public"]["Tables"]["goal_tasks"]["Row"]["status"];
-export type GoalType = "financeira" | "estrategica" | "operacional";
+export type GoalType = Database["public"]["Enums"]["goal_type"];
 
 export const GOAL_TYPES = [
   { value: "financeira", label: "Financeira" },
-  { value: "estrategica", label: "Estratégica" },
-  { value: "operacional", label: "Operacional" },
+  { value: "educacional", label: "Educacional" },
+  { value: "saude", label: "Saúde" },
+  { value: "infraestrutura", label: "Infraestrutura" },
+  { value: "social", label: "Social" },
+  { value: "ambiental", label: "Ambiental" },
+  { value: "cultural", label: "Cultural" },
+  { value: "esporte", label: "Esporte" },
+  { value: "outros", label: "Outros" },
 ] as const;
 
 export interface TaskFormData {
