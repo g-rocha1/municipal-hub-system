@@ -21,6 +21,8 @@ export const TaskForm = ({ onSubmit, defaultValues }: TaskFormProps) => {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  console.log("TaskForm - Renderizando com usuário:", user?.id);
+
   const form = useForm<TaskFormData>({
     defaultValues: {
       title: defaultValues?.title || "",
@@ -33,11 +35,12 @@ export const TaskForm = ({ onSubmit, defaultValues }: TaskFormProps) => {
   const handleSubmit = async (values: TaskFormData) => {
     try {
       if (!user) {
+        console.error("TaskForm - Usuário não autenticado");
         toast.error("Você precisa estar autenticado para criar tarefas");
         return;
       }
 
-      console.log("TaskForm - Iniciando submissão", values);
+      console.log("TaskForm - Iniciando submissão", { values, userId: user.id });
       setIsSubmitting(true);
       const formData = {
         ...values,
@@ -63,6 +66,7 @@ export const TaskForm = ({ onSubmit, defaultValues }: TaskFormProps) => {
   };
 
   if (!user) {
+    console.error("TaskForm - Tentativa de renderização sem usuário autenticado");
     toast.error("Você precisa estar autenticado para criar tarefas");
     return null;
   }
