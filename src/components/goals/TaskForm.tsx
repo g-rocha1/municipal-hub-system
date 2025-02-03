@@ -8,6 +8,7 @@ import { TaskFormFields } from "./TaskFormFields";
 import { TaskPrioritySelector } from "./TaskPrioritySelector";
 import { TaskDatePicker } from "./TaskDatePicker";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface TaskFormProps {
   onSubmit: (data: TaskFormData & { due_date?: string }) => void;
@@ -16,6 +17,7 @@ interface TaskFormProps {
 
 export const TaskForm = ({ onSubmit, defaultValues }: TaskFormProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [date, setDate] = useState<Date | undefined>(
     defaultValues?.due_date ? new Date(defaultValues.due_date) : undefined
   );
@@ -37,16 +39,19 @@ export const TaskForm = ({ onSubmit, defaultValues }: TaskFormProps) => {
       if (!user) {
         console.error("TaskForm - Usuário não autenticado");
         toast.error("Você precisa estar autenticado para criar tarefas");
+        navigate("/login");
         return;
       }
 
       console.log("TaskForm - Iniciando submissão", { values, userId: user.id });
       setIsSubmitting(true);
+
       const formData = {
         ...values,
         due_date: date?.toISOString().split("T")[0],
         created_by: user.id,
       };
+
       console.log("TaskForm - Dados formatados", formData);
       await onSubmit(formData);
       console.log("TaskForm - Submissão concluída");
@@ -56,7 +61,7 @@ export const TaskForm = ({ onSubmit, defaultValues }: TaskFormProps) => {
     } catch (error: any) {
       console.error("TaskForm - Erro na submissão:", error);
       toast.error(error.message || "Erro ao salvar tarefa");
-    } finally {
+      // Resetar o estado de submissão em caso de erro
       setIsSubmitting(false);
     }
   };

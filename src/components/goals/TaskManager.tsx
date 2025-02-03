@@ -7,6 +7,7 @@ import { TaskList } from "./TaskList";
 import { Task } from "./types";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface TaskManagerProps {
   tasks: Task[];
@@ -17,13 +18,17 @@ interface TaskManagerProps {
 export const TaskManager = ({ tasks, onAddTask, onRemoveTask }: TaskManagerProps) => {
   const [showTaskForm, setShowTaskForm] = useState(false);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleAddTask = async (task: Task) => {
     try {
       if (!user) {
+        console.error("TaskManager - Usuário não autenticado");
         toast.error("Você precisa estar autenticado para adicionar tarefas");
+        navigate("/login");
         return;
       }
+
       console.log("TaskManager - Adicionando tarefa:", task);
       await onAddTask(task);
       setShowTaskForm(false);
@@ -37,9 +42,13 @@ export const TaskManager = ({ tasks, onAddTask, onRemoveTask }: TaskManagerProps
   const handleRemoveTask = async (index: number) => {
     try {
       if (!user) {
+        console.error("TaskManager - Usuário não autenticado");
         toast.error("Você precisa estar autenticado para remover tarefas");
+        navigate("/login");
         return;
       }
+
+      console.log("TaskManager - Removendo tarefa:", index);
       await onRemoveTask(index);
       toast.success("Tarefa removida com sucesso!");
     } catch (error: any) {
