@@ -5,6 +5,8 @@ import { Plus } from "lucide-react";
 import { TaskForm } from "./TaskForm";
 import { TaskList } from "./TaskList";
 import { Task } from "./types";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface TaskManagerProps {
   tasks: Task[];
@@ -14,10 +16,35 @@ interface TaskManagerProps {
 
 export const TaskManager = ({ tasks, onAddTask, onRemoveTask }: TaskManagerProps) => {
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const { user } = useAuth();
 
-  const handleAddTask = (task: Task) => {
-    onAddTask(task);
-    setShowTaskForm(false);
+  const handleAddTask = async (task: Task) => {
+    try {
+      if (!user) {
+        toast.error("Você precisa estar autenticado para adicionar tarefas");
+        return;
+      }
+      await onAddTask(task);
+      setShowTaskForm(false);
+      toast.success("Tarefa adicionada com sucesso!");
+    } catch (error: any) {
+      console.error("TaskManager - Erro ao adicionar tarefa:", error);
+      toast.error(error.message || "Erro ao adicionar tarefa");
+    }
+  };
+
+  const handleRemoveTask = async (index: number) => {
+    try {
+      if (!user) {
+        toast.error("Você precisa estar autenticado para remover tarefas");
+        return;
+      }
+      await onRemoveTask(index);
+      toast.success("Tarefa removida com sucesso!");
+    } catch (error: any) {
+      console.error("TaskManager - Erro ao remover tarefa:", error);
+      toast.error(error.message || "Erro ao remover tarefa");
+    }
   };
 
   return (
@@ -40,7 +67,7 @@ export const TaskManager = ({ tasks, onAddTask, onRemoveTask }: TaskManagerProps
             <TaskForm onSubmit={handleAddTask} />
           </div>
         ) : (
-          <TaskList tasks={tasks} onRemoveTask={onRemoveTask} />
+          <TaskList tasks={tasks} onRemoveTask={handleRemoveTask} />
         )}
       </CardContent>
     </Card>

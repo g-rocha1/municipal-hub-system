@@ -20,11 +20,13 @@ export interface TaskFormData {
   description: string;
   status: TaskStatus;
   weight: number;
+  created_by?: string;
 }
 
 export interface Task extends TaskFormData {
   id?: string;
   due_date?: string;
+  created_by: string;
 }
 
 export interface GoalFormData {

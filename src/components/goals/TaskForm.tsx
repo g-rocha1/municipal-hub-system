@@ -7,6 +7,7 @@ import { TaskFormData } from "./types";
 import { TaskFormFields } from "./TaskFormFields";
 import { TaskPrioritySelector } from "./TaskPrioritySelector";
 import { TaskDatePicker } from "./TaskDatePicker";
+import { toast } from "sonner";
 
 interface TaskFormProps {
   onSubmit: (data: TaskFormData & { due_date?: string }) => void;
@@ -31,19 +32,27 @@ export const TaskForm = ({ onSubmit, defaultValues }: TaskFormProps) => {
 
   const handleSubmit = async (values: TaskFormData) => {
     try {
+      if (!user) {
+        toast.error("Você precisa estar autenticado para criar tarefas");
+        return;
+      }
+
       console.log("TaskForm - Iniciando submissão", values);
       setIsSubmitting(true);
       const formData = {
         ...values,
         due_date: date?.toISOString().split("T")[0],
+        created_by: user.id,
       };
       console.log("TaskForm - Dados formatados", formData);
       await onSubmit(formData);
       console.log("TaskForm - Submissão concluída");
       form.reset();
       setDate(undefined);
-    } catch (error) {
+      toast.success("Tarefa salva com sucesso!");
+    } catch (error: any) {
       console.error("TaskForm - Erro na submissão:", error);
+      toast.error(error.message || "Erro ao salvar tarefa");
     } finally {
       setIsSubmitting(false);
     }
@@ -53,7 +62,10 @@ export const TaskForm = ({ onSubmit, defaultValues }: TaskFormProps) => {
     form.setValue("weight", priority);
   };
 
-  if (!user) return null;
+  if (!user) {
+    toast.error("Você precisa estar autenticado para criar tarefas");
+    return null;
+  }
 
   return (
     <div className="space-y-4">
