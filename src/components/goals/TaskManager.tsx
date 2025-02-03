@@ -24,6 +24,7 @@ export const TaskManager = ({ tasks, onAddTask, onRemoveTask }: TaskManagerProps
         toast.error("Você precisa estar autenticado para adicionar tarefas");
         return;
       }
+      console.log("TaskManager - Adicionando tarefa:", task);
       await onAddTask(task);
       setShowTaskForm(false);
       toast.success("Tarefa adicionada com sucesso!");
