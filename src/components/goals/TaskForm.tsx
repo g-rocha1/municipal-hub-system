@@ -58,11 +58,11 @@ export const TaskForm = ({ onSubmit, defaultValues }: TaskFormProps) => {
       form.reset();
       setDate(undefined);
       toast.success("Tarefa salva com sucesso!");
+      setIsSubmitting(false); // Importante: resetar o estado após o sucesso
     } catch (error: any) {
       console.error("TaskForm - Erro na submissão:", error);
       toast.error(error.message || "Erro ao salvar tarefa");
-      // Resetar o estado de submissão em caso de erro
-      setIsSubmitting(false);
+      setIsSubmitting(false); // Importante: resetar o estado em caso de erro
     }
   };
 

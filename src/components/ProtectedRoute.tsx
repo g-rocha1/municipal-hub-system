@@ -12,6 +12,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     currentPath: location.pathname
   });
 
+  // Se estiver carregando, mostra o spinner
   if (isLoading) {
     console.log("ProtectedRoute - Carregando...");
     return (
@@ -21,11 +22,13 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // Se não estiver autenticado e não estiver carregando, redireciona para login
   if (!isAuthenticated) {
     console.log("ProtectedRoute - Usuário não autenticado, redirecionando para login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Se estiver autenticado e não estiver carregando, renderiza o conteúdo
   console.log("ProtectedRoute - Usuário autenticado, renderizando conteúdo");
   return <>{children}</>;
 }
