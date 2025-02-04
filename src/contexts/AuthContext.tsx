@@ -33,8 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("AuthContext - Erro ao buscar perfil:", error);
         setUser(null);
         setIsAuthenticated(false);
-        setIsLoading(false);
-        throw error;
+        return;
       }
 
       if (profile) {
@@ -82,7 +81,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (event === 'SIGNED_IN' && session?.user?.id) {
         console.log("AuthContext - Usuário logado:", session.user.id);
-        setIsLoading(true);
         await fetchUserProfile(session.user.id);
       } else if (event === 'SIGNED_OUT') {
         console.log("AuthContext - Usuário deslogado");
@@ -117,7 +115,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast.success("Login realizado com sucesso!");
     } catch (error: any) {
       console.error("AuthContext - Erro no login:", error);
-      setIsLoading(false);
       if (error.message === "Invalid login credentials") {
         toast.error("Email ou senha incorretos");
       } else {
