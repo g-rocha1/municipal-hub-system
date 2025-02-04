@@ -22,35 +22,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log("AuthContext - Buscando perfil do usuário:", userId);
       const { data: profile, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("AuthContext - Erro ao buscar perfil:", error);
+        throw error;
+      }
 
       if (profile) {
+        console.log("AuthContext - Perfil encontrado:", profile);
         setUser(profile as User);
         setIsAuthenticated(true);
+      } else {
+        console.log("AuthContext - Nenhum perfil encontrado");
+        setUser(null);
+        setIsAuthenticated(false);
       }
     } catch (error) {
-      console.error("Error fetching user profile:", error);
+      console.error("AuthContext - Erro ao buscar perfil:", error);
       setUser(null);
       setIsAuthenticated(false);
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.error("Error signing out:", error);
-    } finally {
-      setUser(null);
-      setIsAuthenticated(false);
       setIsLoading(false);
     }
   };
@@ -58,18 +55,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        console.log("AuthContext - Inicializando autenticação");
         const { data: { session } } = await supabase.auth.getSession();
+        
         if (session?.user?.id) {
+          console.log("AuthContext - Sessão encontrada:", session.user.id);
           await fetchUserProfile(session.user.id);
         } else {
+          console.log("AuthContext - Nenhuma sessão encontrada");
           setUser(null);
           setIsAuthenticated(false);
+          setIsLoading(false);
         }
       } catch (error) {
-        console.error("Error in initial auth check:", error);
+        console.error("AuthContext - Erro na inicialização:", error);
         setUser(null);
         setIsAuthenticated(false);
-      } finally {
         setIsLoading(false);
       }
     };
@@ -77,9 +78,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("AuthContext - Mudança no estado de autenticação:", event);
+      
       if (event === 'SIGNED_IN' && session?.user?.id) {
+        console.log("AuthContext - Usuário logado:", session.user.id);
         await fetchUserProfile(session.user.id);
       } else if (event === 'SIGNED_OUT') {
+        console.log("AuthContext - Usuário deslogado");
         setUser(null);
         setIsAuthenticated(false);
         setIsLoading(false);
@@ -94,6 +99,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, senha: string) => {
     try {
       setIsLoading(true);
+      console.log("AuthContext - Tentando login:", email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password: senha,
@@ -105,26 +112,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error("Usuário não encontrado");
       }
 
+      console.log("AuthContext - Login bem-sucedido:", data.user.id);
       toast.success("Login realizado com sucesso!");
     } catch (error: any) {
+      console.error("AuthContext - Erro no login:", error);
       if (error.message === "Invalid login credentials") {
         toast.error("Email ou senha incorretos");
       } else {
         toast.error(error.message || "Erro ao fazer login");
       }
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const logout = async () => {
     try {
       setIsLoading(true);
-      await handleSignOut();
+      console.log("AuthContext - Iniciando logout");
+      await supabase.auth.signOut();
+      console.log("AuthContext - Logout realizado com sucesso");
+      setUser(null);
+      setIsAuthenticated(false);
       toast.success("Logout realizado com sucesso!");
     } catch (error: any) {
+      console.error("AuthContext - Erro no logout:", error);
       toast.error(error.message || "Erro ao fazer logout");
+    } finally {
+      setIsLoading(false);
     }
   };
 
